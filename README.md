@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PeerSV portaal
 
-## Getting Started
+Ledenadministratie voor voetbalclub PeerSV. Next.js 15 (App Router) + TypeScript + Tailwind v4 + Drizzle ORM + PostgreSQL.
 
-First, run the development server:
+## Vereisten
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 20+
+- Docker (voor lokale Postgres)
+- npm
+
+## Opstartstappen
+
+1. Installeer dependencies.
+
+   ```bash
+   npm install
+   ```
+
+2. Kopieer de env voorbeeld (al gedaan bij setup, nodig na een fresh clone).
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+3. Start Postgres.
+
+   ```bash
+   docker compose up -d
+   ```
+
+4. Push het Drizzle schema naar de database.
+
+   ```bash
+   npm run db:push
+   ```
+
+5. (Optioneel) Laad voorbeeldleden.
+
+   ```bash
+   npm run db:seed
+   ```
+
+6. Start de dev server.
+
+   ```bash
+   npm run dev
+   ```
+
+   Open http://localhost:3000.
+
+## Scripts
+
+| Script | Doel |
+| --- | --- |
+| `npm run dev` | Start Next.js in dev mode |
+| `npm run build` | Productie build |
+| `npm run start` | Start productie build |
+| `npm run lint` | Run ESLint |
+| `npm run db:generate` | Genereer SQL migrations vanuit `src/db/schema.ts` |
+| `npm run db:migrate` | Pas pending migrations toe |
+| `npm run db:push` | Sync schema direct met de DB (handig in dev) |
+| `npm run db:studio` | Open Drizzle Studio |
+| `npm run db:seed` | Laad voorbeelddata |
+
+## Structuur
+
+```
+src/
+  app/
+    layout.tsx        Globale layout + header/footer
+    page.tsx          Dashboard
+    leden/page.tsx    Ledenoverzicht
+  db/
+    index.ts          Drizzle client
+    schema.ts         Drizzle schema (members)
+    seed.ts           Voorbeelddata
+drizzle.config.ts     Drizzle Kit configuratie
+docker-compose.yml    Lokale Postgres
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`docker-compose.yml` start Postgres 16 op `localhost:5432` met:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- user: `peersv`
+- password: `peersv`
+- database: `peersv`
 
-## Learn More
+Connection string in `.env.local`:
 
-To learn more about Next.js, take a look at the following resources:
+```
+DATABASE_URL=postgres://peersv:peersv@localhost:5432/peersv
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Stoppen: `docker compose down`. Data en volume wissen: `docker compose down -v`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Volgende stappen
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- CRUD endpoints / server actions voor leden
+- Authenticatie
+- Lidmaatschapsbijdragen
