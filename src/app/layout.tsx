@@ -36,11 +36,18 @@ export default async function RootLayout({
                   <Link href="/dashboard" className="hover:underline">
                     Dashboard
                   </Link>
-                  <Link href="/leden" className="hover:underline">
-                    Leden
-                  </Link>
+                  {session.user.role === "admin" && (
+                    <Link href="/leden" className="hover:underline">
+                      Leden
+                    </Link>
+                  )}
                   <span className="text-slate-400">|</span>
-                  <span className="text-slate-600">{session.user.name}</span>
+                  <span className="text-slate-600">
+                    {session.user.name}
+                    <span className="ml-1 text-xs text-slate-400">
+                      ({session.user.role})
+                    </span>
+                  </span>
                   <form action={logout}>
                     <button
                       type="submit"
