@@ -94,8 +94,22 @@ DATABASE_URL=postgres://peersv:peersv@localhost:5432/peersv
 
 Stoppen: `docker compose down`. Data en volume wissen: `docker compose down -v`.
 
+## Auth
+
+Auth.js v5 met credentials provider (e-mail + wachtwoord, bcrypt). `/dashboard` is beschermd via middleware. `/` redirect naar `/dashboard` (of `/login` als je niet ingelogd bent).
+
+Seed accounts:
+
+| E-mail | Wachtwoord | Rol |
+| --- | --- | --- |
+| admin@peersv.be | admin123 | admin |
+| trainer@peersv.be | trainer123 | trainer |
+| vlinder@peersv.be | trainer123 | trainer (vlinder) |
+
+`AUTH_SECRET` zit in `.env.local`. Genereer een nieuwe via `openssl rand -base64 32`.
+
 ## Volgende stappen
 
-- CRUD endpoints / server actions voor leden
-- Authenticatie
+- CRUD endpoints / server actions voor leden, teams, trainers
+- Rollen-gebaseerde authorisatie (admin vs trainer)
 - Lidmaatschapsbijdragen

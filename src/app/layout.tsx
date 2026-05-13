@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Readex_Pro } from "next/font/google";
 import Link from "next/link";
+import { auth } from "@/auth";
+import { logout } from "@/app/actions/auth";
 import "./globals.css";
 
 const readex = Readex_Pro({
@@ -13,11 +15,13 @@ export const metadata: Metadata = {
   description: "Ledenadministratie voor PeerSV",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="nl" className={`${readex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900">
@@ -26,13 +30,34 @@ export default function RootLayout({
             <Link href="/" className="text-lg font-semibold tracking-tight">
               PeerSV Portaal
             </Link>
-            <nav className="flex gap-4 text-sm">
-              <Link href="/" className="hover:underline">
-                Dashboard
-              </Link>
-              <Link href="/leden" className="hover:underline">
-                Leden
-              </Link>
+            <nav className="flex items-center gap-4 text-sm">
+              {session?.user ? (
+                <>
+                  <Link href="/dashboard" className="hover:underline">
+                    Dashboard
+                  </Link>
+                  <Link href="/leden" className="hover:underline">
+                    Leden
+                  </Link>
+                  <span className="text-slate-400">|</span>
+                  <span className="text-slate-600">{session.user.name}</span>
+                  <form action={logout}>
+                    <button
+                      type="submit"
+                      className="rounded-md border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
+                    >
+                      Uitloggen
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="rounded-md bg-slate-900 px-3 py-1.5 text-white hover:bg-slate-800"
+                >
+                  Inloggen
+                </Link>
+              )}
             </nav>
           </div>
         </header>
