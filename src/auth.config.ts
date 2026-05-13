@@ -8,8 +8,11 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
-      if (isOnDashboard) return isLoggedIn;
+      const protectedPrefixes = ["/dashboard", "/leden"];
+      const isProtected = protectedPrefixes.some((p) =>
+        nextUrl.pathname.startsWith(p),
+      );
+      if (isProtected) return isLoggedIn;
       return true;
     },
     async jwt({ token, user }) {
