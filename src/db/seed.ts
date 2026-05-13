@@ -101,7 +101,7 @@ async function main() {
         status: "pending",
       },
     ])
-    .onConflictDoNothing();
+    .onConflictDoNothing({ target: members.email });
 
   console.log("Done.");
   process.exit(0);
