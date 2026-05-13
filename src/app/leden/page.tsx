@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { db } from "@/db";
 import { members } from "@/db/schema";
+import { MemberRow } from "./_components/member-row";
 
 export const dynamic = "force-dynamic";
 
@@ -25,15 +27,19 @@ export default async function LedenPage() {
             {rows.length} {rows.length === 1 ? "lid" : "leden"} geregistreerd.
           </p>
         </div>
+        <Link
+          href="/leden/nieuw"
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        >
+          Nieuw lid
+        </Link>
       </div>
 
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-          Nog geen leden. Run{" "}
-          <code className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-700">
-            npm run db:seed
-          </code>{" "}
-          om voorbeelddata te laden.
+          Nog geen leden. Klik op{" "}
+          <span className="font-medium text-slate-700">Nieuw lid</span> om er
+          eentje toe te voegen.
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -48,7 +54,7 @@ export default async function LedenPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {rows.map((m) => (
-                <tr key={m.id} className="hover:bg-slate-50">
+                <MemberRow key={m.id} id={m.id}>
                   <td className="px-4 py-3 font-medium">
                     {m.firstName} {m.lastName}
                   </td>
@@ -59,7 +65,7 @@ export default async function LedenPage() {
                       {statusLabel[m.status] ?? m.status}
                     </span>
                   </td>
-                </tr>
+                </MemberRow>
               ))}
             </tbody>
           </table>
