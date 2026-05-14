@@ -5,6 +5,7 @@ import {
   members,
   performances,
   seasons,
+  settings,
   teamTrainers,
   teams,
   users,
@@ -184,6 +185,12 @@ async function main() {
       ]);
     }
   }
+
+  console.log("Seeding settings...");
+  await db
+    .insert(settings)
+    .values({ key: "payment_cap_year", value: "3233.91" })
+    .onConflictDoNothing({ target: settings.key });
 
   console.log("Done.");
   process.exit(0);

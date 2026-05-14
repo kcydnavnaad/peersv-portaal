@@ -81,6 +81,12 @@ export default async function RootLayout({
                       >
                         Prestaties
                       </Link>
+                      <Link
+                        href="/admin/uitbetalingen"
+                        className="hover:underline"
+                      >
+                        Uitbetalingen
+                      </Link>
                     </>
                   )}
                   <span className="text-slate-400">|</span>

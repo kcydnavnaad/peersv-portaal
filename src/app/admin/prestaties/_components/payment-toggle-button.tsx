@@ -6,12 +6,35 @@ import {
   markPerformancePaid,
   markPerformanceUnpaid,
 } from "@/app/actions/performances";
+import { previewYearTotalAfterPayment } from "@/app/actions/payouts";
 
 type Props = {
   id: number;
   status: "open" | "paid";
   variant?: "inline" | "detail";
 };
+
+function formatEuros(n: number): string {
+  return new Intl.NumberFormat("nl-BE", {
+    style: "currency",
+    currency: "EUR",
+  }).format(n);
+}
+
+async function confirmCapIfNeeded(id: number): Promise<boolean> {
+  const preview = await previewYearTotalAfterPayment(id);
+  if (preview.status === "ok") return true;
+  const total = formatEuros(preview.yearTotal);
+  const cap = formatEuros(preview.cap);
+  if (preview.status === "warning") {
+    return confirm(
+      `Let op: ${preview.trainerName} nadert het jaarplafond (${total} / ${cap}). Doorgaan?`,
+    );
+  }
+  return confirm(
+    `Let op: ${preview.trainerName} zou het jaarplafond overschrijden (${total} / ${cap}). Dit kan fiscale gevolgen hebben. Doorgaan?`,
+  );
+}
 
 export function PaymentToggleButton({ id, status, variant = "inline" }: Props) {
   const [isPending, startTransition] = useTransition();
@@ -25,11 +48,13 @@ export function PaymentToggleButton({ id, status, variant = "inline" }: Props) {
       startTransition(() => {
         markPerformanceUnpaid(id);
       });
-    } else {
-      startTransition(() => {
-        markPerformancePaid(id);
-      });
+      return;
     }
+    startTransition(async () => {
+      const ok = await confirmCapIfNeeded(id);
+      if (!ok) return;
+      await markPerformancePaid(id);
+    });
   }
 
   if (variant === "detail") {
