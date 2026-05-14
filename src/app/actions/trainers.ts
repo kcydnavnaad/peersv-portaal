@@ -1,5 +1,6 @@
 "use server";
 
+import bcrypt from "bcrypt";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -9,7 +10,8 @@ import { users } from "@/db/schema";
 import { isUniqueViolation } from "@/lib/db-errors";
 import {
   flattenZodErrors,
-  parseTrainerForm,
+  parseTrainerCreateForm,
+  parseTrainerUpdateForm,
   valuesFromFormData,
   type TrainerFormState,
 } from "@/lib/trainers";
@@ -19,6 +21,53 @@ async function requireAdmin() {
   if (session?.user?.role !== "admin") {
     throw new Error("Forbidden");
   }
+}
+
+export async function createTrainer(
+  _prev: TrainerFormState,
+  formData: FormData,
+): Promise<TrainerFormState> {
+  await requireAdmin();
+
+  const parsed = parseTrainerCreateForm(formData);
+  if (!parsed.success) {
+    return {
+      errors: flattenZodErrors(parsed.error),
+      values: valuesFromFormData(formData),
+    };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+
+  let createdId: number;
+  try {
+    const [created] = await db
+      .insert(users)
+      .values({
+        firstName: parsed.data.firstName,
+        lastName: parsed.data.lastName,
+        email: parsed.data.email,
+        phone: parsed.data.phone,
+        trainerRate: parsed.data.trainerRate,
+        isButterfly: parsed.data.isButterfly,
+        iban: parsed.data.iban,
+        passwordHash,
+        role: "trainer",
+      })
+      .returning({ id: users.id });
+    createdId = created.id;
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return {
+        errors: { email: "Dit e-mailadres is al in gebruik" },
+        values: valuesFromFormData(formData),
+      };
+    }
+    throw err;
+  }
+
+  revalidatePath("/admin/trainers");
+  redirect(`/admin/trainers/${createdId}?created=1`);
 }
 
 export async function updateTrainer(
@@ -38,7 +87,7 @@ export async function updateTrainer(
     return { message: "Trainer niet gevonden." };
   }
 
-  const parsed = parseTrainerForm(formData);
+  const parsed = parseTrainerUpdateForm(formData);
   if (!parsed.success) {
     return {
       errors: flattenZodErrors(parsed.error),

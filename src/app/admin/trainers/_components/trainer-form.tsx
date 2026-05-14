@@ -20,6 +20,7 @@ type Props = {
   };
   submitLabel: string;
   cancelHref: string;
+  includePassword?: boolean;
 };
 
 const inputCls =
@@ -32,6 +33,7 @@ export function TrainerForm({
   defaults,
   submitLabel,
   cancelHref,
+  includePassword = false,
 }: Props) {
   const [state, formAction, isPending] = useActionState<
     TrainerFormState,
@@ -173,6 +175,31 @@ export function TrainerForm({
           <p className={errorCls}>{state.errors.isButterfly}</p>
         )}
       </div>
+
+      {includePassword && (
+        <div>
+          <label htmlFor="password" className={labelCls}>
+            Initieel wachtwoord *
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            defaultValue={v("password")}
+            className={inputCls}
+            autoComplete="new-password"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Minstens 8 karakters. Geef dit door aan de trainer; je ziet het
+            nadien niet meer.
+          </p>
+          {state.errors?.password && (
+            <p className={errorCls}>{state.errors.password}</p>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
         <Link

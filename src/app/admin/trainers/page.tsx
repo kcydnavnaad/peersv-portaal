@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -23,12 +24,20 @@ export default async function TrainersListPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Trainers</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          {rows.length}{" "}
-          {rows.length === 1 ? "trainer" : "trainers"} in het systeem.
-        </p>
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Trainers</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            {rows.length}{" "}
+            {rows.length === 1 ? "trainer" : "trainers"} in het systeem.
+          </p>
+        </div>
+        <Link
+          href="/admin/trainers/nieuw"
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        >
+          Nieuwe trainer
+        </Link>
       </div>
 
       {rows.length === 0 ? (
