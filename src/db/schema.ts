@@ -20,6 +20,17 @@ export const memberStatusEnum = pgEnum("member_status", [
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "trainer"]);
 
+export const performanceTypeEnum = pgEnum("performance_type", [
+  "training",
+  "match",
+  "tournament",
+]);
+
+export const performanceStatusEnum = pgEnum("performance_status", [
+  "open",
+  "paid",
+]);
+
 export const members = pgTable("members", {
   id: serial("id").primaryKey(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
@@ -103,6 +114,31 @@ export const settings = pgTable("settings", {
   value: text("value").notNull(),
 });
 
+export const performances = pgTable("performances", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  teamId: integer("team_id")
+    .notNull()
+    .references(() => teams.id, { onDelete: "restrict" }),
+  type: performanceTypeEnum("type").notNull(),
+  performanceDate: date("performance_date").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  status: performanceStatusEnum("status").notNull().default("open"),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  paidBy: integer("paid_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export type Member = typeof members.$inferSelect;
 export type NewMember = typeof members.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -115,3 +151,5 @@ export type TeamTrainer = typeof teamTrainers.$inferSelect;
 export type NewTeamTrainer = typeof teamTrainers.$inferInsert;
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
+export type Performance = typeof performances.$inferSelect;
+export type NewPerformance = typeof performances.$inferInsert;

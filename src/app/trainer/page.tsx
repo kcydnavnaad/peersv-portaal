@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { asc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -53,6 +54,31 @@ export default async function TrainerLandingPage() {
               </span>
             </span>
           )}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-medium">Mijn prestaties</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Log trainingen, wedstrijden en tornooien.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/trainer/prestaties"
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
+            >
+              Bekijken
+            </Link>
+            <Link
+              href="/trainer/prestaties/nieuw"
+              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Nieuwe prestatie
+            </Link>
+          </div>
         </div>
       </section>
 

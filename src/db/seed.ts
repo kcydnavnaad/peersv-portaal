@@ -1,7 +1,20 @@
 import bcrypt from "bcrypt";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "./index";
-import { members, seasons, teams, users } from "./schema";
+import {
+  members,
+  performances,
+  seasons,
+  teamTrainers,
+  teams,
+  users,
+} from "./schema";
+
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
 
 async function main() {
   console.log("Seeding users...");
@@ -102,6 +115,75 @@ async function main() {
       },
     ])
     .onConflictDoNothing({ target: members.email });
+
+  console.log("Seeding Tom's team link + performances...");
+  const [tom] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "trainer@peersv.be"))
+    .limit(1);
+  const [senioren] = await db
+    .select()
+    .from(teams)
+    .where(and(eq(teams.name, "Senioren A"), eq(teams.seasonId, season.id)))
+    .limit(1);
+
+  if (tom && senioren) {
+    const [link] = await db
+      .select()
+      .from(teamTrainers)
+      .where(
+        and(
+          eq(teamTrainers.userId, tom.id),
+          eq(teamTrainers.teamId, senioren.id),
+        ),
+      )
+      .limit(1);
+    if (!link) {
+      await db.insert(teamTrainers).values({
+        userId: tom.id,
+        teamId: senioren.id,
+        isHeadTrainer: true,
+      });
+    }
+
+    const existingPerf = await db
+      .select()
+      .from(performances)
+      .where(eq(performances.userId, tom.id))
+      .limit(1);
+    if (existingPerf.length === 0) {
+      const rate = tom.trainerRate ?? "25.00";
+      await db.insert(performances).values([
+        {
+          userId: tom.id,
+          teamId: senioren.id,
+          type: "training",
+          performanceDate: daysAgo(14),
+          amount: rate,
+          status: "open",
+          notes: "Tactiektraining",
+        },
+        {
+          userId: tom.id,
+          teamId: senioren.id,
+          type: "training",
+          performanceDate: daysAgo(7),
+          amount: rate,
+          status: "open",
+        },
+        {
+          userId: tom.id,
+          teamId: senioren.id,
+          type: "match",
+          performanceDate: daysAgo(2),
+          amount: rate,
+          status: "open",
+          notes: "Thuiswedstrijd",
+        },
+      ]);
+    }
+  }
 
   console.log("Done.");
   process.exit(0);
