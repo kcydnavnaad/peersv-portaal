@@ -47,6 +47,12 @@ export default async function RootLayout({
                       >
                         Teams
                       </Link>
+                      <Link
+                        href="/admin/trainers"
+                        className="hover:underline"
+                      >
+                        Trainers
+                      </Link>
                     </>
                   )}
                   <span className="text-slate-400">|</span>

@@ -35,12 +35,12 @@ export default async function AdminLandingPage() {
           </p>
         </Link>
         <Link
-          href="/trainer"
+          href="/admin/trainers"
           className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow"
         >
-          <h2 className="text-lg font-medium">Trainersweergave</h2>
+          <h2 className="text-lg font-medium">Trainers</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Bekijk wat trainers zien.
+            Tarieven, vlinder-status en IBAN beheren.
           </p>
         </Link>
       </section>
