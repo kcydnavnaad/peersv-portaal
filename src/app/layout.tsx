@@ -53,6 +53,12 @@ export default async function RootLayout({
                       >
                         Trainers
                       </Link>
+                      <Link
+                        href="/admin/prestaties"
+                        className="hover:underline"
+                      >
+                        Prestaties
+                      </Link>
                     </>
                   )}
                   <span className="text-slate-400">|</span>

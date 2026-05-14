@@ -25,6 +25,18 @@ async function requireTrainer() {
   return { userId };
 }
 
+async function requireAdmin() {
+  const session = await auth();
+  if (session?.user?.role !== "admin") {
+    throw new Error("Forbidden");
+  }
+  const userId = Number(session.user.id);
+  if (!Number.isFinite(userId)) {
+    throw new Error("Invalid session");
+  }
+  return { userId };
+}
+
 async function loadTrainer(userId: number) {
   const [me] = await db.select().from(users).where(eq(users.id, userId));
   if (!me) throw new Error("User not found");
@@ -160,6 +172,44 @@ export async function updatePerformance(
   revalidatePath("/trainer/prestaties");
   revalidatePath(`/trainer/prestaties/${id}`);
   redirect(`/trainer/prestaties/${id}`);
+}
+
+export async function markPerformancePaid(id: number) {
+  const { userId: adminId } = await requireAdmin();
+
+  await db
+    .update(performances)
+    .set({
+      status: "paid",
+      paidAt: new Date(),
+      paidBy: adminId,
+      updatedAt: new Date(),
+    })
+    .where(eq(performances.id, id));
+
+  revalidatePath("/admin/prestaties");
+  revalidatePath(`/admin/prestaties/${id}`);
+  revalidatePath("/trainer/prestaties");
+  revalidatePath(`/trainer/prestaties/${id}`);
+}
+
+export async function markPerformanceUnpaid(id: number) {
+  await requireAdmin();
+
+  await db
+    .update(performances)
+    .set({
+      status: "open",
+      paidAt: null,
+      paidBy: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(performances.id, id));
+
+  revalidatePath("/admin/prestaties");
+  revalidatePath(`/admin/prestaties/${id}`);
+  revalidatePath("/trainer/prestaties");
+  revalidatePath(`/trainer/prestaties/${id}`);
 }
 
 export async function deletePerformance(id: number) {

@@ -15,7 +15,7 @@ export default async function AdminLandingPage() {
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link
           href="/leden"
           className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow"
@@ -41,6 +41,15 @@ export default async function AdminLandingPage() {
           <h2 className="text-lg font-medium">Trainers</h2>
           <p className="mt-1 text-sm text-slate-600">
             Tarieven, vlinder-status en IBAN beheren.
+          </p>
+        </Link>
+        <Link
+          href="/admin/prestaties"
+          className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow"
+        >
+          <h2 className="text-lg font-medium">Prestaties</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Alle trainerprestaties bekijken en uitbetalen.
           </p>
         </Link>
       </section>
