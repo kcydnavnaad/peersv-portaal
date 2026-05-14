@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
+import {
+  toggleHeadTrainer,
+  toggleTeamTrainer,
+} from "@/app/actions/team-trainers";
 import { db } from "@/db";
-import { seasons, teamTrainers, teams } from "@/db/schema";
+import { seasons, teamTrainers, teams, users } from "@/db/schema";
 import { DeleteTeamButton } from "../_components/delete-team-button";
+import { TrainerToggle } from "../_components/trainer-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +39,27 @@ export default async function TeamDetailPage({
     .limit(1);
 
   if (!team) notFound();
+
+  const trainerRows = await db
+    .select({
+      userId: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+      isButterfly: users.isButterfly,
+      linkId: teamTrainers.id,
+      isHeadTrainer: teamTrainers.isHeadTrainer,
+    })
+    .from(users)
+    .leftJoin(
+      teamTrainers,
+      and(
+        eq(teamTrainers.userId, users.id),
+        eq(teamTrainers.teamId, teamId),
+      ),
+    )
+    .where(eq(users.role, "trainer"))
+    .orderBy(asc(users.lastName), asc(users.firstName));
 
   return (
     <div className="space-y-6">
@@ -75,6 +101,64 @@ export default async function TeamDetailPage({
           />
         </dl>
       </div>
+
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <header className="border-b border-slate-200 px-4 py-3">
+          <h2 className="text-lg font-medium">Trainers</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Vink aan om een trainer aan dit team te koppelen.
+          </p>
+        </header>
+        {trainerRows.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-slate-500">
+            Nog geen trainers in het systeem.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {trainerRows.map((t) => {
+              const linked = t.linkId !== null;
+              return (
+                <li
+                  key={t.userId}
+                  className="flex items-center justify-between gap-4 px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <TrainerToggle
+                      teamId={team.id}
+                      userId={t.userId}
+                      checked={linked}
+                      action={toggleTeamTrainer}
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-900">
+                          {t.firstName} {t.lastName}
+                        </span>
+                        {t.isButterfly && (
+                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800">
+                            Vlinder
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {t.email ?? "-"}
+                      </div>
+                    </div>
+                  </div>
+                  <TrainerToggle
+                    teamId={team.id}
+                    userId={t.userId}
+                    checked={!!t.isHeadTrainer}
+                    disabled={!linked}
+                    label="Hoofdtrainer"
+                    action={toggleHeadTrainer}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
