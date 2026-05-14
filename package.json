@@ -10,7 +10,7 @@
     "db:generate": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs migrate",
     "db:push": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs push",
-    "db:studio": "drizzle-kit studio",
+    "db:studio": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs studio",
     "db:seed": "node --env-file=.env.local --import tsx src/db/seed.ts"
   },
   "dependencies": {
