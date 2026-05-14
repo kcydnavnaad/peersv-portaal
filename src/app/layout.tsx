@@ -37,9 +37,17 @@ export default async function RootLayout({
                     Dashboard
                   </Link>
                   {session.user.role === "admin" && (
-                    <Link href="/leden" className="hover:underline">
-                      Leden
-                    </Link>
+                    <>
+                      <Link href="/leden" className="hover:underline">
+                        Leden
+                      </Link>
+                      <Link
+                        href="/admin/teams"
+                        className="hover:underline"
+                      >
+                        Teams
+                      </Link>
+                    </>
                   )}
                   <span className="text-slate-400">|</span>
                   <span className="text-slate-600">

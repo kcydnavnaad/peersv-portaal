@@ -8,6 +8,7 @@ import {
   serial,
   text,
   timestamp,
+  unique,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -67,17 +68,21 @@ export const seasons = pgTable("seasons", {
     .notNull(),
 });
 
-export const teams = pgTable("teams", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  category: varchar("category", { length: 100 }).notNull(),
-  seasonId: integer("season_id")
-    .notNull()
-    .references(() => seasons.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const teams = pgTable(
+  "teams",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(),
+    category: varchar("category", { length: 100 }),
+    seasonId: integer("season_id")
+      .notNull()
+      .references(() => seasons.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [unique("teams_name_season_unique").on(t.name, t.seasonId)],
+);
 
 export const teamTrainers = pgTable("team_trainers", {
   id: serial("id").primaryKey(),

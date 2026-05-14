@@ -26,6 +26,15 @@ export default async function AdminLandingPage() {
           </p>
         </Link>
         <Link
+          href="/admin/teams"
+          className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow"
+        >
+          <h2 className="text-lg font-medium">Teams</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Teams en seizoenen beheren.
+          </p>
+        </Link>
+        <Link
           href="/trainer"
           className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow"
         >
@@ -34,10 +43,6 @@ export default async function AdminLandingPage() {
             Bekijk wat trainers zien.
           </p>
         </Link>
-        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-5 text-slate-500">
-          <h2 className="text-lg font-medium">Meer modules</h2>
-          <p className="mt-1 text-sm">Komen later.</p>
-        </div>
       </section>
     </div>
   );
