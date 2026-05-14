@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Readex_Pro } from "next/font/google";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { logout } from "@/app/actions/auth";
+import { SWRegister } from "./sw-register";
 import "./globals.css";
 
 const readex = Readex_Pro({
@@ -12,7 +13,27 @@ const readex = Readex_Pro({
 
 export const metadata: Metadata = {
   title: "PeerSV Portaal",
-  description: "Ledenadministratie voor PeerSV",
+  description: "Portaal voor jeugdwerking PeerSV",
+  applicationName: "PeerSV Portaal",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "PeerSV",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function RootLayout({
@@ -25,6 +46,7 @@ export default async function RootLayout({
   return (
     <html lang="nl" className={`${readex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900">
+        <SWRegister />
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-lg font-semibold tracking-tight">

@@ -5,6 +5,7 @@ const ADMIN_ONLY_PREFIXES = ["/admin", "/leden"];
 const AUTHED_PREFIXES = ["/dashboard", "/trainer", ...ADMIN_ONLY_PREFIXES];
 
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
