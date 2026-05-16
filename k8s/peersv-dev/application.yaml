@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: peersv-dev
+  namespace: argocd
+  annotations:
+    link.argocd.argoproj.io/external-link: https://teampoint-dev.webbaas.be
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kcydnavnaad/k3s-homelab.git
+    path: apps/peersv-dev
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: peersv-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
