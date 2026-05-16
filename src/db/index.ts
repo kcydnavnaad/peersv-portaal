@@ -1,19 +1,28 @@
-import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
-}
+type PgClient = ReturnType<typeof postgres>;
+type Db = ReturnType<typeof drizzle<typeof schema>>;
 
 const globalForDb = globalThis as unknown as {
-  client?: ReturnType<typeof postgres>;
+  __pgClient?: PgClient;
+  __drizzle?: Db;
 };
 
-const client = globalForDb.client ?? postgres(connectionString, { max: 10 });
-if (process.env.NODE_ENV !== "production") globalForDb.client = client;
+function getDb(): Db {
+  if (globalForDb.__drizzle) return globalForDb.__drizzle;
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  const client = globalForDb.__pgClient ?? postgres(url, { max: 10 });
+  if (process.env.NODE_ENV !== "production") globalForDb.__pgClient = client;
+  const instance = drizzle(client, { schema });
+  if (process.env.NODE_ENV !== "production") globalForDb.__drizzle = instance;
+  return instance;
+}
 
-export const db = drizzle(client, { schema });
+export const db = new Proxy({} as Db, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getDb(), prop, receiver);
+  },
+}) as Db;
