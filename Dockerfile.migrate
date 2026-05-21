@@ -1,0 +1,14 @@
+# syntax=docker/dockerfile:1.7
+
+# Minimal image that runs Drizzle migrations against Postgres using psql.
+# postgres:16-alpine ships psql and the bash interpreter we need.
+FROM postgres:16-alpine
+
+WORKDIR /app
+
+COPY scripts/migrate.sh /app/migrate.sh
+COPY drizzle/ /migrations/
+
+RUN chmod +x /app/migrate.sh
+
+ENTRYPOINT ["/app/migrate.sh"]

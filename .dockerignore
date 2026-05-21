@@ -13,9 +13,9 @@ CLAUDE.md
 .npm
 coverage
 .cache
-scripts
 docker-compose.yml
 Dockerfile
+Dockerfile.migrate
 .dockerignore
 **/*.log
 npm-debug.log*
