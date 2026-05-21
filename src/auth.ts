@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .limit(1);
 
         if (!user) return null;
+        if (user.deactivatedAt) return null;
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;

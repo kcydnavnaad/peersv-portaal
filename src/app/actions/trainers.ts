@@ -156,3 +156,38 @@ export async function resetTrainerPassword(
   revalidatePath(`/admin/trainers/${trainerId}`);
   return { newPassword };
 }
+
+export type ToggleActivationResult = {
+  error?: string;
+  deactivated?: boolean;
+};
+
+export async function toggleTrainerActivation(
+  trainerId: number,
+): Promise<ToggleActivationResult> {
+  await requireAdmin();
+
+  const [trainer] = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.id, trainerId), eq(users.role, "trainer")))
+    .limit(1);
+
+  if (!trainer) {
+    return { error: "Trainer niet gevonden." };
+  }
+
+  const willDeactivate = trainer.deactivatedAt === null;
+
+  await db
+    .update(users)
+    .set({
+      deactivatedAt: willDeactivate ? new Date() : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, trainerId));
+
+  revalidatePath("/admin/trainers");
+  revalidatePath(`/admin/trainers/${trainerId}`);
+  return { deactivated: willDeactivate };
+}

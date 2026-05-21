@@ -60,6 +60,7 @@ export const users = pgTable("users", {
   isButterfly: boolean("is_butterfly").notNull().default(false),
   trainerRate: decimal("trainer_rate", { precision: 10, scale: 2 }),
   iban: text("iban"),
+  deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

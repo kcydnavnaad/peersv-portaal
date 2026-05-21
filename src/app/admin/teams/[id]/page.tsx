@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import {
   toggleHeadTrainer,
   toggleTeamTrainer,
@@ -47,6 +47,7 @@ export default async function TeamDetailPage({
       lastName: users.lastName,
       email: users.email,
       isButterfly: users.isButterfly,
+      deactivatedAt: users.deactivatedAt,
       linkId: teamTrainers.id,
       isHeadTrainer: teamTrainers.isHeadTrainer,
     })
@@ -58,7 +59,12 @@ export default async function TeamDetailPage({
         eq(teamTrainers.teamId, teamId),
       ),
     )
-    .where(eq(users.role, "trainer"))
+    .where(
+      and(
+        eq(users.role, "trainer"),
+        or(isNull(users.deactivatedAt), isNotNull(teamTrainers.id)),
+      ),
+    )
     .orderBy(asc(users.lastName), asc(users.firstName));
 
   return (
@@ -117,10 +123,13 @@ export default async function TeamDetailPage({
           <ul className="divide-y divide-slate-100">
             {trainerRows.map((t) => {
               const linked = t.linkId !== null;
+              const isDeactivated = t.deactivatedAt !== null;
               return (
                 <li
                   key={t.userId}
-                  className="flex items-center justify-between gap-4 px-4 py-3"
+                  className={`flex items-center justify-between gap-4 px-4 py-3 ${
+                    isDeactivated ? "opacity-60" : ""
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <TrainerToggle
@@ -137,6 +146,11 @@ export default async function TeamDetailPage({
                         {t.isButterfly && (
                           <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800">
                             Vlinder
+                          </span>
+                        )}
+                        {isDeactivated && (
+                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700">
+                            Gedeactiveerd
                           </span>
                         )}
                       </div>

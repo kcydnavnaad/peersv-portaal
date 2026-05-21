@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { formatIban, formatRate } from "@/lib/trainers";
@@ -7,7 +7,25 @@ import { TrainerRow } from "./_components/trainer-row";
 
 export const dynamic = "force-dynamic";
 
-export default async function TrainersListPage() {
+type ViewMode = "active" | "deactivated" | "all";
+
+export default async function TrainersListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  const sp = await searchParams;
+  const view: ViewMode =
+    sp.view === "deactivated" || sp.view === "all" ? sp.view : "active";
+
+  const baseFilter = eq(users.role, "trainer");
+  const filter =
+    view === "active"
+      ? and(baseFilter, isNull(users.deactivatedAt))
+      : view === "deactivated"
+        ? and(baseFilter, isNotNull(users.deactivatedAt))
+        : baseFilter;
+
   const rows = await db
     .select({
       id: users.id,
@@ -17,10 +35,17 @@ export default async function TrainersListPage() {
       trainerRate: users.trainerRate,
       isButterfly: users.isButterfly,
       iban: users.iban,
+      deactivatedAt: users.deactivatedAt,
     })
     .from(users)
-    .where(eq(users.role, "trainer"))
+    .where(filter)
     .orderBy(asc(users.lastName), asc(users.firstName));
+
+  const labelMap: Record<ViewMode, string> = {
+    active: "Actieve trainers",
+    deactivated: "Gedeactiveerde trainers",
+    all: "Alle trainers",
+  };
 
   return (
     <div className="space-y-6">
@@ -29,7 +54,7 @@ export default async function TrainersListPage() {
           <h1 className="text-3xl font-semibold tracking-tight">Trainers</h1>
           <p className="mt-1 text-sm text-slate-600">
             {rows.length}{" "}
-            {rows.length === 1 ? "trainer" : "trainers"} in het systeem.
+            {rows.length === 1 ? "trainer" : "trainers"} ({labelMap[view].toLowerCase()}).
           </p>
         </div>
         <Link
@@ -40,9 +65,20 @@ export default async function TrainersListPage() {
         </Link>
       </div>
 
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-slate-500">Toon:</span>
+        <ViewLink current={view} target="active" label="Actief" />
+        <ViewLink current={view} target="deactivated" label="Gedeactiveerd" />
+        <ViewLink current={view} target="all" label="Alles" />
+      </div>
+
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-          Nog geen trainers.
+          {view === "active"
+            ? "Geen actieve trainers."
+            : view === "deactivated"
+              ? "Geen gedeactiveerde trainers."
+              : "Nog geen trainers."}
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -54,36 +90,79 @@ export default async function TrainersListPage() {
                 <th className="px-4 py-3 text-right">Tarief</th>
                 <th className="px-4 py-3">Vlinder</th>
                 <th className="px-4 py-3">IBAN</th>
+                <th className="px-4 py-3">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {rows.map((t) => (
-                <TrainerRow key={t.id} id={t.id}>
-                  <td className="px-4 py-3 font-medium">
-                    {t.firstName} {t.lastName}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{t.email}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-slate-700">
-                    {formatRate(t.trainerRate)}
-                  </td>
-                  <td className="px-4 py-3">
-                    {t.isButterfly ? (
-                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800">
-                        Vlinder
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600 tabular-nums">
-                    {formatIban(t.iban)}
-                  </td>
-                </TrainerRow>
-              ))}
+              {rows.map((t) => {
+                const isDeactivated = t.deactivatedAt !== null;
+                const rowClass = isDeactivated ? "opacity-60" : "";
+                return (
+                  <TrainerRow key={t.id} id={t.id}>
+                    <td className={`px-4 py-3 font-medium ${rowClass}`}>
+                      {t.firstName} {t.lastName}
+                    </td>
+                    <td className={`px-4 py-3 text-slate-600 ${rowClass}`}>
+                      {t.email}
+                    </td>
+                    <td className={`px-4 py-3 text-right tabular-nums text-slate-700 ${rowClass}`}>
+                      {formatRate(t.trainerRate)}
+                    </td>
+                    <td className={`px-4 py-3 ${rowClass}`}>
+                      {t.isButterfly ? (
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800">
+                          Vlinder
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className={`px-4 py-3 text-slate-600 tabular-nums ${rowClass}`}>
+                      {formatIban(t.iban)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {isDeactivated ? (
+                        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700">
+                          Gedeactiveerd
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+                          Actief
+                        </span>
+                      )}
+                    </td>
+                  </TrainerRow>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
     </div>
+  );
+}
+
+function ViewLink({
+  current,
+  target,
+  label,
+}: {
+  current: ViewMode;
+  target: ViewMode;
+  label: string;
+}) {
+  const active = current === target;
+  const href = target === "active" ? "/admin/trainers" : `/admin/trainers?view=${target}`;
+  return (
+    <Link
+      href={href}
+      className={
+        active
+          ? "rounded-md bg-slate-900 px-3 py-1 text-xs font-medium text-white"
+          : "rounded-md border border-slate-300 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+      }
+    >
+      {label}
+    </Link>
   );
 }

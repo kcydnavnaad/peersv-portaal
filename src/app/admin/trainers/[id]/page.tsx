@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { formatIban, formatRate } from "@/lib/trainers";
 import { ResetPasswordButton } from "../_components/ResetPasswordButton";
+import { ToggleActivationButton } from "../_components/ToggleActivationButton";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function TrainerDetailPage({
   if (!trainer) notFound();
 
   const fullName = `${trainer.firstName} ${trainer.lastName}`;
+  const isDeactivated = trainer.deactivatedAt !== null;
 
   return (
     <div className="space-y-6">
@@ -37,6 +39,12 @@ export default async function TrainerDetailPage({
         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Trainer aangemaakt. Vergeet niet het initiële wachtwoord door te geven
           aan de trainer.
+        </div>
+      )}
+      {isDeactivated && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Deze trainer is gedeactiveerd en kan niet inloggen. Historische
+          prestaties en koppelingen blijven bewaard.
         </div>
       )}
       <div className="flex items-end justify-between gap-4">
@@ -50,13 +58,25 @@ export default async function TrainerDetailPage({
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
             {fullName}
           </h1>
-          {trainer.isButterfly && (
-            <span className="mt-2 inline-block rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-800">
-              Vlinder
-            </span>
-          )}
+          <div className="mt-2 flex items-center gap-2">
+            {trainer.isButterfly && (
+              <span className="inline-block rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-800">
+                Vlinder
+              </span>
+            )}
+            {isDeactivated && (
+              <span className="inline-block rounded-full bg-slate-200 px-3 py-1 text-xs text-slate-700">
+                Gedeactiveerd
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
+          <ToggleActivationButton
+            trainerId={trainer.id}
+            trainerName={fullName}
+            isDeactivated={isDeactivated}
+          />
           <ResetPasswordButton trainerId={trainer.id} trainerName={fullName} />
           <Link
             href={`/admin/trainers/${trainer.id}/bewerken`}
@@ -76,6 +96,14 @@ export default async function TrainerDetailPage({
           <Row label="Tarief" value={formatRate(trainer.trainerRate)} />
           <Row label="Vlinder" value={trainer.isButterfly ? "Ja" : "Nee"} />
           <Row label="IBAN" value={formatIban(trainer.iban)} />
+          <Row
+            label="Status"
+            value={
+              isDeactivated
+                ? `Gedeactiveerd op ${trainer.deactivatedAt!.toLocaleString("nl-BE")}`
+                : "Actief"
+            }
+          />
           <Row
             label="Aangemaakt"
             value={trainer.createdAt.toLocaleString("nl-BE")}
