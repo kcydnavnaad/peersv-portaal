@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { formatIban, formatRate } from "@/lib/trainers";
+import { ResetPasswordButton } from "../_components/ResetPasswordButton";
 
 export const dynamic = "force-dynamic";
 
@@ -55,12 +56,15 @@ export default async function TrainerDetailPage({
             </span>
           )}
         </div>
-        <Link
-          href={`/admin/trainers/${trainer.id}/bewerken`}
-          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
-        >
-          Bewerken
-        </Link>
+        <div className="flex items-center gap-2">
+          <ResetPasswordButton trainerId={trainer.id} trainerName={fullName} />
+          <Link
+            href={`/admin/trainers/${trainer.id}/bewerken`}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            Bewerken
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">

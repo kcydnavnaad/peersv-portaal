@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { isUniqueViolation } from "@/lib/db-errors";
+import { generateReadablePassword } from "@/lib/password";
 import {
   flattenZodErrors,
   parseTrainerCreateForm,
@@ -122,4 +123,36 @@ export async function updateTrainer(
   revalidatePath("/admin/trainers");
   revalidatePath(`/admin/trainers/${id}`);
   redirect(`/admin/trainers/${id}`);
+}
+
+export type ResetPasswordResult = {
+  error?: string;
+  newPassword?: string;
+};
+
+export async function resetTrainerPassword(
+  trainerId: number,
+): Promise<ResetPasswordResult> {
+  await requireAdmin();
+
+  const [trainer] = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.id, trainerId), eq(users.role, "trainer")))
+    .limit(1);
+
+  if (!trainer) {
+    return { error: "Trainer niet gevonden." };
+  }
+
+  const newPassword = generateReadablePassword();
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  await db
+    .update(users)
+    .set({ passwordHash, updatedAt: new Date() })
+    .where(eq(users.id, trainerId));
+
+  revalidatePath(`/admin/trainers/${trainerId}`);
+  return { newPassword };
 }

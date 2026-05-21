@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Readex_Pro } from "next/font/google";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { logout } from "@/app/actions/auth";
+import { UserMenu } from "./_components/UserMenu";
 import { SWRegister } from "./sw-register";
 import "./globals.css";
 
@@ -90,20 +90,10 @@ export default async function RootLayout({
                     </>
                   )}
                   <span className="text-slate-400">|</span>
-                  <span className="text-slate-600">
-                    {session.user.name}
-                    <span className="ml-1 text-xs text-slate-400">
-                      ({session.user.role})
-                    </span>
-                  </span>
-                  <form action={logout}>
-                    <button
-                      type="submit"
-                      className="rounded-md border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
-                    >
-                      Uitloggen
-                    </button>
-                  </form>
+                  <UserMenu
+                    name={session.user.name ?? ""}
+                    role={session.user.role ?? ""}
+                  />
                 </>
               ) : (
                 <Link
