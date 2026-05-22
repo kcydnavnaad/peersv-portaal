@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1.7
+
+# Minimal image that dumps a Postgres database and uploads it via SCP.
+# postgres:16-alpine ships pg_dump, gzip and bash; openssh-client adds scp/ssh.
+FROM postgres:16-alpine
+
+RUN apk add --no-cache openssh-client
+
+WORKDIR /app
+
+COPY scripts/backup.sh /app/backup.sh
+
+RUN chmod +x /app/backup.sh
+
+ENTRYPOINT ["/app/backup.sh"]

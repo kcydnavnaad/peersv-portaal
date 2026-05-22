@@ -1,10 +1,11 @@
-# Build and push the Next.js app image and the migrations runner image to
-# GitHub Container Registry.
+# Build and push the Next.js app image, the migrations runner image and the
+# backup runner image to GitHub Container Registry.
 #
 # After the first successful push, mark each package public so K3s can pull
 # without credentials:
 #   https://github.com/kcydnavnaad/peersv-portaal/pkgs/container/peersv-portaal
 #   https://github.com/kcydnavnaad/peersv-portaal/pkgs/container/peersv-portaal-migrate
+#   https://github.com/kcydnavnaad/peersv-portaal/pkgs/container/peersv-portaal-backup
 #   -> Package Settings -> Change visibility -> Public
 
 name: docker-build
@@ -22,6 +23,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: kcydnavnaad/peersv-portaal
   MIGRATE_IMAGE_NAME: kcydnavnaad/peersv-portaal-migrate
+  BACKUP_IMAGE_NAME: kcydnavnaad/peersv-portaal-backup
 
 jobs:
   build-and-push:
@@ -96,3 +98,40 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=migrate
           cache-to: type=gha,mode=max,scope=migrate
+
+  build-and-push-backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKUP_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.backup
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=backup
+          cache-to: type=gha,mode=max,scope=backup
