@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Readex_Pro } from "next/font/google";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { EnvironmentBadge } from "./_components/EnvironmentBadge";
 import { UserMenu } from "./_components/UserMenu";
 import { SWRegister } from "./sw-register";
 import "./globals.css";
@@ -46,6 +47,7 @@ export default async function RootLayout({
   return (
     <html lang="nl" className={`${readex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900">
+        <EnvironmentBadge env={process.env.APP_ENV} />
         <SWRegister />
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
