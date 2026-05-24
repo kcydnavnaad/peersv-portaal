@@ -81,15 +81,19 @@ git tag -a "$TAG" -m "Release $TAG"
 log "pushing $TAG to origin"
 git push origin "$TAG"
 
+GREEN=$'\033[1;32m'
+RESET=$'\033[0m'
+
 cat <<NEXT
 
-\033[1;32mTag $TAG pushed.\033[0m Next steps:
+${GREEN}Tag $TAG pushed.${RESET} Next steps:
 
   1. Wait for GitHub Actions to build and push images:
        gh run watch
 
+  # Git tag = v$VERSION (semver conventie), Docker image tag = $VERSION (geen v, matches GHCR output)
   2. Bump the prod image tag in k3s-homelab:
-       sed -i.bak "s|peersv-portaal\\(-migrate\\|-backup\\)\\?:.*|peersv-portaal\\1:$TAG|g" \\
+       sed -i.bak "s|peersv-portaal\\(-migrate\\|-backup\\)\\?:.*|peersv-portaal\\1:$VERSION|g" \\
          ~/VDK/k3s-homelab/apps/peersv-prod/deployment.yaml
 
   3. Commit and push k3s-homelab:
