@@ -15,9 +15,9 @@ function getDb(): Db {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
   const client = globalForDb.__pgClient ?? postgres(url, { max: 10 });
-  if (process.env.NODE_ENV !== "production") globalForDb.__pgClient = client;
+  globalForDb.__pgClient = client;
   const instance = drizzle(client, { schema });
-  if (process.env.NODE_ENV !== "production") globalForDb.__drizzle = instance;
+  globalForDb.__drizzle = instance;
   return instance;
 }
 
