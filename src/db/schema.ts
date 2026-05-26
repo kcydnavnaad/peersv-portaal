@@ -110,6 +110,27 @@ export const teamTrainers = pgTable("team_trainers", {
     .notNull(),
 });
 
+export const teamMembers = pgTable(
+  "team_members",
+  {
+    id: serial("id").primaryKey(),
+    teamId: integer("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    memberId: integer("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    joinedAt: date("joined_at").defaultNow().notNull(),
+    leftAt: date("left_at"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    unique("team_members_team_member_active_unique").on(t.teamId, t.memberId, t.leftAt),
+  ],
+);
+
 export const settings = pgTable("settings", {
   key: varchar("key", { length: 100 }).primaryKey(),
   value: text("value").notNull(),
@@ -150,6 +171,8 @@ export type Team = typeof teams.$inferSelect;
 export type NewTeam = typeof teams.$inferInsert;
 export type TeamTrainer = typeof teamTrainers.$inferSelect;
 export type NewTeamTrainer = typeof teamTrainers.$inferInsert;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type NewTeamMember = typeof teamMembers.$inferInsert;
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
 export type Performance = typeof performances.$inferSelect;
