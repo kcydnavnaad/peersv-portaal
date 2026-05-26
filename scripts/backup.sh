@@ -63,4 +63,19 @@ scp \
   "${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}"
 
 log "upload complete"
+
+if [[ -n "${RETENTION_DAYS:-}" ]]; then
+  log "cleaning up backups older than ${RETENTION_DAYS} days on ${SSH_HOST}"
+  deleted=$(ssh \
+    -i "$SSH_PRIVATE_KEY_PATH" \
+    -o StrictHostKeyChecking=accept-new \
+    -o UserKnownHostsFile=/tmp/known_hosts \
+    "${SSH_USER}@${SSH_HOST}" \
+    "find ${REMOTE_PATH} -maxdepth 1 -name '${BACKUP_PREFIX}-*.sql.gz' -type f -mtime +${RETENTION_DAYS} -print -delete" \
+    | wc -l)
+  log "cleanup done: ${deleted} file(s) removed"
+else
+  log "RETENTION_DAYS not set, skipping cleanup"
+fi
+
 log "done: ${filename}"
