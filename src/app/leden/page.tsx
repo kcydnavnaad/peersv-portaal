@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { members } from "@/db/schema";
+import { members, teamMembers, teams } from "@/db/schema";
 import { MemberRow } from "./_components/member-row";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,25 @@ const statusLabel: Record<string, string> = {
 
 export default async function LedenPage() {
   const rows = await db
-    .select()
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      email: members.email,
+      status: members.status,
+      createdAt: members.createdAt,
+      teamNames: sql<string | null>`string_agg(${teams.name}, ', ' ORDER BY ${teams.name})`,
+    })
     .from(members)
+    .leftJoin(
+      teamMembers,
+      and(
+        eq(teamMembers.memberId, members.id),
+        isNull(teamMembers.leftAt),
+      ),
+    )
+    .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+    .groupBy(members.id)
     .orderBy(desc(members.createdAt));
 
   return (
@@ -59,7 +76,7 @@ export default async function LedenPage() {
                     {m.firstName} {m.lastName}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{m.email ?? "-"}</td>
-                  <td className="px-4 py-3 text-slate-600">{m.team ?? "-"}</td>
+                  <td className="px-4 py-3 text-slate-600">{m.teamNames ?? "-"}</td>
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
                       {statusLabel[m.status] ?? m.status}
