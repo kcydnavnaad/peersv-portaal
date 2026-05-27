@@ -12,7 +12,6 @@ type Props = {
     email?: string | null;
     phone?: string | null;
     birthDate?: string | null;
-    team?: string | null;
     status?: "active" | "inactive" | "pending";
   };
   submitLabel: string;
@@ -104,37 +103,20 @@ export function MemberForm({ action, defaults, submitLabel, cancelHref }: Props)
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="birthDate" className={labelCls}>
-            Geboortedatum
-          </label>
-          <input
-            id="birthDate"
-            name="birthDate"
-            type="date"
-            defaultValue={v("birthDate", defaults?.birthDate)}
-            className={inputCls}
-          />
-          {state.errors?.birthDate && (
-            <p className={errorCls}>{state.errors.birthDate}</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="team" className={labelCls}>
-            Ploeg
-          </label>
-          <input
-            id="team"
-            name="team"
-            type="text"
-            defaultValue={v("team", defaults?.team)}
-            className={inputCls}
-          />
-          {state.errors?.team && (
-            <p className={errorCls}>{state.errors.team}</p>
-          )}
-        </div>
+      <div>
+        <label htmlFor="birthDate" className={labelCls}>
+          Geboortedatum
+        </label>
+        <input
+          id="birthDate"
+          name="birthDate"
+          type="date"
+          defaultValue={v("birthDate", defaults?.birthDate)}
+          className={inputCls}
+        />
+        {state.errors?.birthDate && (
+          <p className={errorCls}>{state.errors.birthDate}</p>
+        )}
       </div>
 
       <div>

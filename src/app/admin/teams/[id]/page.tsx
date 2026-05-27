@@ -6,8 +6,9 @@ import {
   toggleTeamTrainer,
 } from "@/app/actions/team-trainers";
 import { db } from "@/db";
-import { seasons, teamTrainers, teams, users } from "@/db/schema";
+import { members, seasons, teamMembers, teamTrainers, teams, users } from "@/db/schema";
 import { DeleteTeamButton } from "../_components/delete-team-button";
+import { TeamMembersSection } from "../_components/team-members-section";
 import { TrainerToggle } from "../_components/trainer-toggle";
 
 export const dynamic = "force-dynamic";
@@ -66,6 +67,40 @@ export default async function TeamDetailPage({
       ),
     )
     .orderBy(asc(users.lastName), asc(users.firstName));
+
+  const activeMemberRows = await db
+    .select({
+      teamMemberId: teamMembers.id,
+      memberId: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      joinedAt: teamMembers.joinedAt,
+    })
+    .from(teamMembers)
+    .innerJoin(members, eq(teamMembers.memberId, members.id))
+    .where(
+      and(
+        eq(teamMembers.teamId, teamId),
+        isNull(teamMembers.leftAt),
+      ),
+    )
+    .orderBy(asc(members.lastName), asc(members.firstName));
+
+  const activeMemberIds = activeMemberRows.map((m) => m.memberId);
+
+  const availableMemberRows = await db
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+    })
+    .from(members)
+    .where(
+      activeMemberIds.length > 0
+        ? sql`${members.id} NOT IN ${activeMemberIds}`
+        : sql`TRUE`,
+    )
+    .orderBy(asc(members.lastName), asc(members.firstName));
 
   return (
     <div className="space-y-6">
@@ -173,6 +208,12 @@ export default async function TeamDetailPage({
           </ul>
         )}
       </section>
+
+      <TeamMembersSection
+        teamId={team.id}
+        activeMembers={activeMemberRows}
+        availableMembers={availableMemberRows}
+      />
     </div>
   );
 }

@@ -41,9 +41,6 @@ export const memberSchema = z.object({
       )
       .nullable(),
   ),
-  team: optionalString.pipe(
-    z.string().max(100, "Maximaal 100 tekens").nullable(),
-  ),
   status: z.enum(["active", "inactive", "pending"]),
 });
 
@@ -62,7 +59,6 @@ export function parseMemberForm(formData: FormData) {
     email: formData.get("email"),
     phone: formData.get("phone"),
     birthDate: formData.get("birthDate"),
-    team: formData.get("team"),
     status: formData.get("status") ?? "active",
   };
   return memberSchema.safeParse(raw);
@@ -86,7 +82,6 @@ export function valuesFromFormData(formData: FormData): Record<string, string> {
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     birthDate: String(formData.get("birthDate") ?? ""),
-    team: String(formData.get("team") ?? ""),
     status: String(formData.get("status") ?? "active"),
   };
 }
