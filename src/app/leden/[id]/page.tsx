@@ -99,7 +99,7 @@ export default async function MemberDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <Link
             href="/leden"
@@ -208,9 +208,9 @@ function Row({
   value: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-3 px-4 py-3">
+    <div className="grid grid-cols-1 gap-1 px-4 py-3 md:grid-cols-3 md:gap-0">
       <dt className="text-slate-500">{label}</dt>
-      <dd className="col-span-2 text-slate-900">{value}</dd>
+      <dd className="text-slate-900 md:col-span-2">{value}</dd>
     </div>
   );
 }
