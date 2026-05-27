@@ -2,6 +2,7 @@ import Link from "next/link";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { members, teamMembers, teams } from "@/db/schema";
+import { MemberCard } from "./_components/member-card";
 import { MemberRow } from "./_components/member-row";
 
 export const dynamic = "force-dynamic";
@@ -59,34 +60,52 @@ export default async function LedenPage() {
           eentje toe te voegen.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Naam</th>
-                <th className="px-4 py-3">E-mail</th>
-                <th className="px-4 py-3">Ploeg</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((m) => (
-                <MemberRow key={m.id} id={m.id}>
-                  <td className="px-4 py-3 font-medium">
-                    {m.firstName} {m.lastName}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{m.email ?? "-"}</td>
-                  <td className="px-4 py-3 text-slate-600">{m.teamNames ?? "-"}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
-                      {statusLabel[m.status] ?? m.status}
-                    </span>
-                  </td>
-                </MemberRow>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Desktop: tabel */}
+          <div className="hidden md:block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Naam</th>
+                  <th className="px-4 py-3">E-mail</th>
+                  <th className="px-4 py-3">Ploeg</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((m) => (
+                  <MemberRow key={m.id} id={m.id}>
+                    <td className="px-4 py-3 font-medium">
+                      {m.firstName} {m.lastName}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{m.email ?? "-"}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.teamNames ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+                        {statusLabel[m.status] ?? m.status}
+                      </span>
+                    </td>
+                  </MemberRow>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: cards */}
+          <div className="md:hidden space-y-3">
+            {rows.map((m) => (
+              <MemberCard
+                key={m.id}
+                id={m.id}
+                firstName={m.firstName}
+                lastName={m.lastName}
+                email={m.email}
+                teamNames={m.teamNames}
+                statusLabel={statusLabel[m.status] ?? m.status}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
