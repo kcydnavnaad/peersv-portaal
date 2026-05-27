@@ -10,6 +10,7 @@ import {
 } from "@/lib/payment-cap";
 import { ExportCsvButton } from "./_components/export-csv-button";
 import { MonthFilter } from "./_components/month-filter";
+import { PayoutCard } from "./_components/payout-card";
 
 export const dynamic = "force-dynamic";
 
@@ -155,62 +156,90 @@ export default async function PayoutsPage({
         <MonthFilter options={monthOptions} current={monthValue} />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3">Trainer</th>
-              <th className="px-4 py-3 text-right">Open ({monthLabel})</th>
-              <th className="px-4 py-3 text-right">
-                Betaald ({monthLabel})
-              </th>
-              <th className="px-4 py-3 text-right">Jaartotaal {year}</th>
-              <th className="px-4 py-3">Plafond</th>
-              <th className="px-4 py-3 text-right">Actie</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {rows.map((r) => {
-              const yt = Number(r.yearTotal);
-              const status = getCapStatus(yt);
-              return (
-                <tr key={r.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium">
-                    {r.firstName} {r.lastName}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums">
-                    {formatAmount(r.openMonth)}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
-                    {formatAmount(r.paidMonth)}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
-                    {formatAmount(r.yearTotal)}
-                  </td>
-                  <td className="px-4 py-3">{capBadge(status)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/admin/prestaties?trainer=${r.id}&period=month`}
-                      className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-50"
-                    >
-                      Bekijk prestaties
-                    </Link>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-          <tfoot className="border-t border-slate-200 bg-slate-50">
-            <tr>
-              <td className="px-4 py-3 font-medium">Totaal openstaand</td>
-              <td className="px-4 py-3 text-right tabular-nums font-medium">
+      <>
+        {/* Desktop: tabel */}
+        <div className="hidden md:block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-4 py-3">Trainer</th>
+                <th className="px-4 py-3 text-right">Open ({monthLabel})</th>
+                <th className="px-4 py-3 text-right">
+                  Betaald ({monthLabel})
+                </th>
+                <th className="px-4 py-3 text-right">Jaartotaal {year}</th>
+                <th className="px-4 py-3">Plafond</th>
+                <th className="px-4 py-3 text-right">Actie</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((r) => {
+                const yt = Number(r.yearTotal);
+                const status = getCapStatus(yt);
+                return (
+                  <tr key={r.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 font-medium">
+                      {r.firstName} {r.lastName}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatAmount(r.openMonth)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                      {formatAmount(r.paidMonth)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                      {formatAmount(r.yearTotal)}
+                    </td>
+                    <td className="px-4 py-3">{capBadge(status)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/admin/prestaties?trainer=${r.id}&period=month`}
+                        className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-50"
+                      >
+                        Bekijk prestaties
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot className="border-t border-slate-200 bg-slate-50">
+              <tr>
+                <td className="px-4 py-3 font-medium">Totaal openstaand</td>
+                <td className="px-4 py-3 text-right tabular-nums font-medium">
+                  {formatAmount(totalOpenMonth.toFixed(2))}
+                </td>
+                <td colSpan={4}></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="md:hidden space-y-3">
+          {rows.map((r) => (
+            <PayoutCard
+              key={r.id}
+              id={r.id}
+              firstName={r.firstName}
+              lastName={r.lastName}
+              openMonth={r.openMonth}
+              paidMonth={r.paidMonth}
+              yearTotal={r.yearTotal}
+              monthLabel={monthLabel}
+              year={year}
+            />
+          ))}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Totaal openstaand</span>
+              <span className="tabular-nums font-medium">
                 {formatAmount(totalOpenMonth.toFixed(2))}
-              </td>
-              <td colSpan={4}></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+              </span>
+            </div>
+          </div>
+        </div>
+      </>
     </div>
   );
 }

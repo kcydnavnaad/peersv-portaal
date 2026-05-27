@@ -15,6 +15,7 @@ import {
 } from "@/lib/performances";
 import { FiltersBar } from "./_components/filters-bar";
 import { PaymentToggleButton } from "./_components/payment-toggle-button";
+import { PerformanceCard } from "./_components/performance-card";
 import { PerformanceRow } from "./_components/performance-row";
 
 export const dynamic = "force-dynamic";
@@ -108,46 +109,65 @@ export default async function AdminPerformancesListPage({
           Geen prestaties voor deze filters.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Trainer</th>
-                <th className="px-4 py-3">Datum</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Ploeg</th>
-                <th className="px-4 py-3 text-right">Bedrag</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actie</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((p) => (
-                <PerformanceRow key={p.id} id={p.id}>
-                  <td className="px-4 py-3 font-medium">{p.trainerName}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {formatDate(p.date)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {performanceTypeLabel[p.type]}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {p.teamName ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-slate-700">
-                    {formatAmount(p.amount)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={p.status} />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <PaymentToggleButton id={p.id} status={p.status} />
-                  </td>
-                </PerformanceRow>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Desktop: tabel */}
+          <div className="hidden md:block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Trainer</th>
+                  <th className="px-4 py-3">Datum</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Ploeg</th>
+                  <th className="px-4 py-3 text-right">Bedrag</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actie</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((p) => (
+                  <PerformanceRow key={p.id} id={p.id}>
+                    <td className="px-4 py-3 font-medium">{p.trainerName}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {formatDate(p.date)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {performanceTypeLabel[p.type]}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {p.teamName ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      {formatAmount(p.amount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={p.status} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <PaymentToggleButton id={p.id} status={p.status} />
+                    </td>
+                  </PerformanceRow>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: cards */}
+          <div className="md:hidden space-y-3">
+            {rows.map((p) => (
+              <PerformanceCard
+                key={p.id}
+                id={p.id}
+                date={p.date}
+                type={p.type}
+                amount={p.amount}
+                status={p.status}
+                trainerName={p.trainerName}
+                teamName={p.teamName}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
