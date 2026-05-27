@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { performances, seasons, teams } from "@/db/schema";
+import { attendances, members, performances, seasons, teamMembers, teams } from "@/db/schema";
 import {
   formatAmount,
   performanceStatusLabel,
@@ -56,6 +56,45 @@ export default async function PerformanceDetailPage({
 
   if (!perf) notFound();
   if (Number.isFinite(userId) && perf.userId !== userId) notFound();
+
+  // Haal performance teamId apart op (zat niet in de eerste select)
+  const [perfTeam] = await db
+    .select({ teamId: performances.teamId })
+    .from(performances)
+    .where(eq(performances.id, perfId))
+    .limit(1);
+
+  // Actieve leden in dit team + hun aanwezigheid voor deze prestatie
+  const attendanceRows = perfTeam
+    ? await db
+        .select({
+          memberId: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+          present: attendances.present,
+        })
+        .from(teamMembers)
+        .innerJoin(members, eq(teamMembers.memberId, members.id))
+        .leftJoin(
+          attendances,
+          and(
+            eq(attendances.memberId, members.id),
+            eq(attendances.performanceId, perfId),
+          ),
+        )
+        .where(
+          and(
+            eq(teamMembers.teamId, perfTeam.teamId),
+            isNull(teamMembers.leftAt),
+          ),
+        )
+        .orderBy(asc(members.lastName), asc(members.firstName))
+    : [];
+
+  const hasAnyAttendance = attendanceRows.some((r) => r.present !== null);
+  const presentCount = attendanceRows.filter((r) => r.present === true).length;
+  const absentCount = attendanceRows.filter((r) => r.present === false).length;
+  const unknownCount = attendanceRows.filter((r) => r.present === null).length;
 
   const isOpen = perf.status === "open";
 
@@ -128,6 +167,58 @@ export default async function PerformanceDetailPage({
           />
         </dl>
       </div>
+
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          <div>
+            <h2 className="text-lg font-medium">Aanwezigheden</h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {!hasAnyAttendance
+                ? "Nog niet ingevuld."
+                : `${presentCount} aanwezig, ${absentCount} afwezig${unknownCount > 0 ? `, ${unknownCount} onbekend` : ""}.`}
+            </p>
+          </div>
+          {isOpen && (
+            <Link
+              href={`/trainer/prestaties/${perf.id}/aanwezigheden`}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50"
+            >
+              {hasAnyAttendance ? "Bewerken" : "Invullen"}
+            </Link>
+          )}
+        </header>
+        {attendanceRows.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-slate-500">
+            Geen actieve leden in deze ploeg.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {attendanceRows.map((r) => (
+              <li
+                key={r.memberId}
+                className="flex items-center justify-between gap-4 px-4 py-3"
+              >
+                <span className="text-sm font-medium text-slate-900">
+                  {r.firstName} {r.lastName}
+                </span>
+                {r.present === true ? (
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800">
+                    Aanwezig
+                  </span>
+                ) : r.present === false ? (
+                  <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-800">
+                    Afwezig
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                    Onbekend
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, asc, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import {
   toggleHeadTrainer,
   toggleTeamTrainer,
 } from "@/app/actions/team-trainers";
 import { db } from "@/db";
-import { members, seasons, teamMembers, teamTrainers, teams, users } from "@/db/schema";
+import { attendances, members, performances, seasons, teamMembers, teamTrainers, teams, users } from "@/db/schema";
 import { DeleteTeamButton } from "../_components/delete-team-button";
+import { TeamAttendanceSection } from "../_components/team-attendance-section";
 import { TeamMembersSection } from "../_components/team-members-section";
 import { TrainerToggle } from "../_components/trainer-toggle";
 
@@ -101,6 +102,64 @@ export default async function TeamDetailPage({
         : sql`TRUE`,
     )
     .orderBy(asc(members.lastName), asc(members.firstName));
+
+  // Laatste 10 prestaties voor dit team
+  const recentPerformances = await db
+    .select({
+      id: performances.id,
+      date: performances.performanceDate,
+      type: performances.type,
+    })
+    .from(performances)
+    .where(eq(performances.teamId, teamId))
+    .orderBy(desc(performances.performanceDate))
+    .limit(10);
+
+  const performanceIds = recentPerformances.map((p) => p.id);
+
+  // Alle aanwezigheidsrecords voor deze prestaties + leden
+  const attendanceRecords =
+    performanceIds.length > 0 && activeMemberIds.length > 0
+      ? await db
+          .select({
+            memberId: attendances.memberId,
+            performanceId: attendances.performanceId,
+            present: attendances.present,
+          })
+          .from(attendances)
+          .where(
+            and(
+              sql`${attendances.performanceId} IN ${performanceIds}`,
+              sql`${attendances.memberId} IN ${activeMemberIds}`,
+            ),
+          )
+      : [];
+
+  // Bouw matrix map en stats per lid
+  const matrix = new Map<string, "present" | "absent">();
+  for (const a of attendanceRecords) {
+    matrix.set(
+      `${a.memberId}-${a.performanceId}`,
+      a.present ? "present" : "absent",
+    );
+  }
+
+  const memberStats = activeMemberRows.map((m) => {
+    const records = attendanceRecords.filter((a) => a.memberId === m.memberId);
+    const presentCount = records.filter((a) => a.present).length;
+    const absentCount = records.filter((a) => !a.present).length;
+    const total = records.length;
+    const rate = total > 0 ? Math.round((presentCount / total) * 100) : 0;
+    return {
+      memberId: m.memberId,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      presentCount,
+      absentCount,
+      total,
+      rate,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -213,6 +272,12 @@ export default async function TeamDetailPage({
         teamId={team.id}
         activeMembers={activeMemberRows}
         availableMembers={availableMemberRows}
+      />
+
+      <TeamAttendanceSection
+        performances={recentPerformances}
+        memberStats={memberStats}
+        matrix={matrix}
       />
     </div>
   );

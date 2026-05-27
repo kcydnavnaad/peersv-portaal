@@ -161,6 +161,26 @@ export const performances = pgTable("performances", {
     .notNull(),
 });
 
+export const attendances = pgTable(
+  "attendances",
+  {
+    id: serial("id").primaryKey(),
+    performanceId: integer("performance_id")
+      .notNull()
+      .references(() => performances.id, { onDelete: "cascade" }),
+    memberId: integer("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    present: boolean("present").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    unique("attendances_performance_member_unique").on(t.performanceId, t.memberId),
+  ],
+);
+
 export type Member = typeof members.$inferSelect;
 export type NewMember = typeof members.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -177,3 +197,5 @@ export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
 export type Performance = typeof performances.$inferSelect;
 export type NewPerformance = typeof performances.$inferInsert;
+export type Attendance = typeof attendances.$inferSelect;
+export type NewAttendance = typeof attendances.$inferInsert;

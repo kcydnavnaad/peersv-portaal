@@ -105,18 +105,21 @@ export async function createPerformance(
     return { ...teamCheck, values: valuesFromFormData(formData) };
   }
 
-  await db.insert(performances).values({
-    userId,
-    teamId: parsed.data.team,
-    type: parsed.data.type,
-    performanceDate: parsed.data.performanceDate,
-    amount: me.trainerRate,
-    notes: parsed.data.notes,
-  });
+  const [created] = await db
+    .insert(performances)
+    .values({
+      userId,
+      teamId: parsed.data.team,
+      type: parsed.data.type,
+      performanceDate: parsed.data.performanceDate,
+      amount: me.trainerRate,
+      notes: parsed.data.notes,
+    })
+    .returning({ id: performances.id });
 
   revalidatePath("/trainer/prestaties");
   revalidatePath("/trainer");
-  redirect("/trainer/prestaties");
+  redirect(`/trainer/prestaties/${created.id}/aanwezigheden`);
 }
 
 export async function updatePerformance(

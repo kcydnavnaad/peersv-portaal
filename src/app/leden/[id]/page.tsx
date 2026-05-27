@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { members, seasons, teamMembers, teams } from "@/db/schema";
+import {
+  attendances,
+  members,
+  performances,
+  seasons,
+  teamMembers,
+  teams,
+} from "@/db/schema";
 import { DeleteMemberButton } from "../_components/delete-member-button";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +67,34 @@ export default async function MemberDetailPage({
       ? "-"
       : activeTeamRows.map((t) => t.teamName).join(", ");
 
+  // Laatste 20 aanwezigheden voor dit lid (over alle teams)
+  const attendanceHistory = await db
+    .select({
+      attendanceId: attendances.id,
+      performanceId: performances.id,
+      performanceDate: performances.performanceDate,
+      performanceType: performances.type,
+      teamName: teams.name,
+      present: attendances.present,
+    })
+    .from(attendances)
+    .innerJoin(performances, eq(attendances.performanceId, performances.id))
+    .leftJoin(teams, eq(performances.teamId, teams.id))
+    .where(eq(attendances.memberId, member.id))
+    .orderBy(desc(performances.performanceDate))
+    .limit(20);
+
+  const presentCount = attendanceHistory.filter((a) => a.present).length;
+  const absentCount = attendanceHistory.filter((a) => !a.present).length;
+  const total = attendanceHistory.length;
+  const presentRate = total > 0 ? Math.round((presentCount / total) * 100) : 0;
+
+  const performanceTypeLabel: Record<string, string> = {
+    training: "Training",
+    match: "Wedstrijd",
+    tournament: "Tornooi",
+  };
+
   const fullName = `${member.firstName} ${member.lastName}`;
 
   return (
@@ -110,6 +145,57 @@ export default async function MemberDetailPage({
           <Row label="Bijgewerkt" value={member.updatedAt.toLocaleString("nl-BE")} />
         </dl>
       </div>
+
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <header className="border-b border-slate-200 px-4 py-3">
+          <h2 className="text-lg font-medium">Aanwezigheden</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {total === 0
+              ? "Nog geen aanwezigheden geregistreerd."
+              : `Laatste ${total}: ${presentCount} aanwezig, ${absentCount} afwezig (${presentRate}%).`}
+          </p>
+        </header>
+        {total > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Datum</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Ploeg</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {attendanceHistory.map((a) => (
+                  <tr key={a.attendanceId}>
+                    <td className="px-4 py-3 text-slate-600">
+                      {formatDate(a.performanceDate)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {performanceTypeLabel[a.performanceType] ?? a.performanceType}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {a.teamName ?? "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {a.present ? (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800">
+                          Aanwezig
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-800">
+                          Afwezig
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
