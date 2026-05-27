@@ -3,6 +3,7 @@ import { Readex_Pro } from "next/font/google";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { EnvironmentBadge } from "./_components/EnvironmentBadge";
+import { MobileNav } from "./_components/MobileNav";
 import { UserMenu } from "./_components/UserMenu";
 import { SWRegister } from "./sw-register";
 import "./globals.css";
@@ -50,48 +51,59 @@ export default async function RootLayout({
         <EnvironmentBadge env={process.env.APP_ENV} />
         <SWRegister />
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 md:px-6">
             <Link href="/" className="text-lg font-semibold tracking-tight">
               PeerSV Portaal
             </Link>
             <nav className="flex items-center gap-4 text-sm">
               {session?.user ? (
                 <>
-                  <Link href="/dashboard" className="hover:underline">
-                    Dashboard
-                  </Link>
-                  {session.user.role === "admin" && (
-                    <>
-                      <Link href="/leden" className="hover:underline">
-                        Leden
-                      </Link>
-                      <Link
-                        href="/admin/teams"
-                        className="hover:underline"
-                      >
-                        Teams
-                      </Link>
-                      <Link
-                        href="/admin/trainers"
-                        className="hover:underline"
-                      >
-                        Trainers
-                      </Link>
-                      <Link
-                        href="/admin/prestaties"
-                        className="hover:underline"
-                      >
-                        Prestaties
-                      </Link>
-                      <Link
-                        href="/admin/uitbetalingen"
-                        className="hover:underline"
-                      >
-                        Uitbetalingen
-                      </Link>
-                    </>
-                  )}
-                  <span className="text-slate-400">|</span>
+                  {/* Desktop nav links: zichtbaar vanaf md */}
+                  <div className="hidden md:flex md:items-center md:gap-4">
+                    <Link href="/dashboard" className="hover:underline">
+                      Dashboard
+                    </Link>
+                    {session.user.role === "admin" && (
+                      <>
+                        <Link href="/leden" className="hover:underline">
+                          Leden
+                        </Link>
+                        <Link href="/admin/teams" className="hover:underline">
+                          Teams
+                        </Link>
+                        <Link href="/admin/trainers" className="hover:underline">
+                          Trainers
+                        </Link>
+                        <Link href="/admin/prestaties" className="hover:underline">
+                          Prestaties
+                        </Link>
+                        <Link href="/admin/uitbetalingen" className="hover:underline">
+                          Uitbetalingen
+                        </Link>
+                      </>
+                    )}
+                    <span className="text-slate-400">|</span>
+                  </div>
+
+                  {/* Mobile nav: alleen zichtbaar onder md */}
+                  <div className="md:hidden">
+                    <MobileNav
+                      links={
+                        session.user.role === "admin"
+                          ? [
+                              { href: "/dashboard", label: "Dashboard" },
+                              { href: "/leden", label: "Leden" },
+                              { href: "/admin/teams", label: "Teams" },
+                              { href: "/admin/trainers", label: "Trainers" },
+                              { href: "/admin/prestaties", label: "Prestaties" },
+                              { href: "/admin/uitbetalingen", label: "Uitbetalingen" },
+                            ]
+                          : [{ href: "/dashboard", label: "Dashboard" }]
+                      }
+                    />
+                  </div>
+
+                  {/* UserMenu blijft op alle breedtes */}
                   <UserMenu
                     name={session.user.name ?? ""}
                     role={session.user.role ?? ""}
@@ -108,7 +120,7 @@ export default async function RootLayout({
             </nav>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-6 md:py-8">
           {children}
         </main>
         <footer className="border-t border-slate-200 bg-white">
