@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { members } from "@/db/schema";
+import { members, seasons, teamMembers, teams } from "@/db/schema";
 import { DeleteMemberButton } from "../_components/delete-member-button";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +38,27 @@ export default async function MemberDetailPage({
     .limit(1);
 
   if (!member) notFound();
+
+  const activeTeamRows = await db
+    .select({
+      teamName: teams.name,
+      seasonName: seasons.name,
+    })
+    .from(teamMembers)
+    .innerJoin(teams, eq(teamMembers.teamId, teams.id))
+    .leftJoin(seasons, eq(teams.seasonId, seasons.id))
+    .where(
+      and(
+        eq(teamMembers.memberId, member.id),
+        isNull(teamMembers.leftAt),
+      ),
+    )
+    .orderBy(asc(teams.name));
+
+  const teamsDisplay =
+    activeTeamRows.length === 0
+      ? "-"
+      : activeTeamRows.map((t) => t.teamName).join(", ");
 
   const fullName = `${member.firstName} ${member.lastName}`;
 
@@ -76,7 +97,7 @@ export default async function MemberDetailPage({
           <Row label="E-mail" value={member.email ?? "-"} />
           <Row label="Telefoon" value={member.phone ?? "-"} />
           <Row label="Geboortedatum" value={formatDate(member.birthDate)} />
-          <Row label="Ploeg" value={member.team ?? "-"} />
+          <Row label="Ploeg" value={teamsDisplay} />
           <Row
             label="Status"
             value={
