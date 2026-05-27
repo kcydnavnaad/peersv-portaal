@@ -8,6 +8,7 @@ import {
   performanceStatusLabel,
   performanceTypeLabel,
 } from "@/lib/performances";
+import { PerformanceCard } from "./_components/performance-card";
 import { PerformanceRow } from "./_components/performance-row";
 
 export const dynamic = "force-dynamic";
@@ -66,40 +67,58 @@ export default async function PerformancesListPage() {
           om er eentje te loggen.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Datum</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Ploeg</th>
-                <th className="px-4 py-3 text-right">Bedrag</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((p) => (
-                <PerformanceRow key={p.id} id={p.id}>
-                  <td className="px-4 py-3 font-medium">
-                    {formatDate(p.performanceDate)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {performanceTypeLabel[p.type]}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {p.teamName ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-slate-700">
-                    {formatAmount(p.amount)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={p.status} />
-                  </td>
-                </PerformanceRow>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Desktop: tabel */}
+          <div className="hidden md:block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Datum</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Ploeg</th>
+                  <th className="px-4 py-3 text-right">Bedrag</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((p) => (
+                  <PerformanceRow key={p.id} id={p.id}>
+                    <td className="px-4 py-3 font-medium">
+                      {formatDate(p.performanceDate)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {performanceTypeLabel[p.type]}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {p.teamName ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      {formatAmount(p.amount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={p.status} />
+                    </td>
+                  </PerformanceRow>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: cards */}
+          <div className="md:hidden space-y-3">
+            {rows.map((p) => (
+              <PerformanceCard
+                key={p.id}
+                id={p.id}
+                performanceDate={p.performanceDate}
+                type={p.type}
+                amount={p.amount}
+                status={p.status}
+                teamName={p.teamName}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
