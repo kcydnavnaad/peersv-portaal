@@ -50,7 +50,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900">
         <EnvironmentBadge env={process.env.APP_ENV} />
         <SWRegister />
-        <header className="border-b border-slate-200 bg-white">
+        <header className="relative border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 md:px-6">
             <Link href="/" className="text-lg font-semibold tracking-tight">
               PeerSV Portaal

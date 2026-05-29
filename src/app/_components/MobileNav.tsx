@@ -39,7 +39,7 @@ export function MobileNav({ links }: Props) {
   }, [open]);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div ref={menuRef}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -75,7 +75,7 @@ export function MobileNav({ links }: Props) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1"
+          className="absolute left-0 right-0 top-full mt-0 border-t border-slate-200 bg-white shadow-lg z-20"
         >
           {links.map((link) => (
             <Link
@@ -83,7 +83,7 @@ export function MobileNav({ links }: Props) {
               href={link.href}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              className="block border-b border-slate-100 px-6 py-4 text-base text-slate-700 hover:bg-slate-50"
             >
               {link.label}
             </Link>
