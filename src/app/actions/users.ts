@@ -112,5 +112,5 @@ export async function createUser(
   }
 
   revalidatePath("/admin/users");
-  redirect(`/admin/users/${createdId}?created=1`);
+  redirect(`/admin/users?created=1`);
 }

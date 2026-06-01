@@ -14,13 +14,14 @@ type RoleFilter = "all" | "admin" | "trainer";
 export default async function UsersListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; role?: string }>;
+  searchParams: Promise<{ view?: string; role?: string; created?: string }>;
 }) {
   const sp = await searchParams;
   const view: ViewMode =
     sp.view === "deactivated" || sp.view === "all" ? sp.view : "active";
   const roleFilter: RoleFilter =
     sp.role === "admin" || sp.role === "trainer" ? sp.role : "all";
+  const created = sp.created === "1";
 
   const conditions: SQL[] = [];
   if (roleFilter !== "all") {
@@ -64,6 +65,11 @@ export default async function UsersListPage({
 
   return (
     <div className="space-y-6">
+      {created && (
+        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Gebruiker aangemaakt. Vergeet niet het initiële wachtwoord door te geven.
+        </p>
+      )}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Gebruikers</h1>
