@@ -12,6 +12,7 @@ type Props = {
   isButterfly: boolean | null;
   iban: string | null;
   isDeactivated: boolean;
+  lastLoginAt: Date | null;
 };
 
 export function TrainerCard({
@@ -23,6 +24,7 @@ export function TrainerCard({
   isButterfly,
   iban,
   isDeactivated,
+  lastLoginAt,
 }: Props) {
   const router = useRouter();
   const href = `/admin/trainers/${id}`;
@@ -73,6 +75,18 @@ export function TrainerCard({
         <dt className="text-slate-500">IBAN</dt>
         <dd className="text-right tabular-nums text-slate-600">
           {formatIban(iban)}
+        </dd>
+        <dt className="text-slate-500">Laatst ingelogd</dt>
+        <dd className="text-right text-slate-600 text-xs">
+          {lastLoginAt
+            ? new Date(lastLoginAt).toLocaleString("nl-BE", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "—"}
         </dd>
       </dl>
     </div>

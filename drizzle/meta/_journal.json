@@ -29,6 +29,13 @@
       "when": 1779889812573,
       "tag": "0004_fair_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780327582964,
+      "tag": "0005_known_selene",
+      "breakpoints": true
     }
   ]
 }

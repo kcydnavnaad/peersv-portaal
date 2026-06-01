@@ -61,6 +61,7 @@ export const users = pgTable("users", {
   trainerRate: decimal("trainer_rate", { precision: 10, scale: 2 }),
   iban: text("iban"),
   deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

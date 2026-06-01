@@ -37,6 +37,7 @@ export default async function TrainersListPage({
       isButterfly: users.isButterfly,
       iban: users.iban,
       deactivatedAt: users.deactivatedAt,
+      lastLoginAt: users.lastLoginAt,
     })
     .from(users)
     .where(filter)
@@ -94,6 +95,7 @@ export default async function TrainersListPage({
                   <th className="px-4 py-3">Vlinder</th>
                   <th className="px-4 py-3">IBAN</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Laatst ingelogd</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -134,6 +136,17 @@ export default async function TrainersListPage({
                           </span>
                         )}
                       </td>
+                      <td className={`px-4 py-3 text-slate-600 text-xs ${rowClass}`}>
+                        {t.lastLoginAt
+                          ? new Date(t.lastLoginAt).toLocaleString("nl-BE", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}
+                      </td>
                     </TrainerRow>
                   );
                 })}
@@ -154,6 +167,7 @@ export default async function TrainersListPage({
                 isButterfly={t.isButterfly}
                 iban={t.iban}
                 isDeactivated={t.deactivatedAt !== null}
+                lastLoginAt={t.lastLoginAt}
               />
             ))}
           </div>

@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { authConfig } from "./auth.config";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -31,6 +31,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
+
+        // Update last_login_at (fire-and-forget, geen reden om login te blokkeren als update faalt)
+        try {
+          await db
+            .update(users)
+            .set({ lastLoginAt: sql`NOW()` })
+            .where(eq(users.id, user.id));
+        } catch (err) {
+          console.error("Failed to update last_login_at:", err);
+        }
 
         return {
           id: String(user.id),
