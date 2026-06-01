@@ -71,8 +71,8 @@ export default async function RootLayout({
                         <Link href="/admin/teams" className="hover:underline">
                           Teams
                         </Link>
-                        <Link href="/admin/trainers" className="hover:underline">
-                          Trainers
+                        <Link href="/admin/users" className="hover:underline">
+                          Gebruikers
                         </Link>
                         <Link href="/admin/prestaties" className="hover:underline">
                           Prestaties
@@ -94,7 +94,7 @@ export default async function RootLayout({
                               { href: "/dashboard", label: "Dashboard" },
                               { href: "/leden", label: "Leden" },
                               { href: "/admin/teams", label: "Teams" },
-                              { href: "/admin/trainers", label: "Trainers" },
+                              { href: "/admin/users", label: "Gebruikers" },
                               { href: "/admin/prestaties", label: "Prestaties" },
                               { href: "/admin/uitbetalingen", label: "Uitbetalingen" },
                             ]
