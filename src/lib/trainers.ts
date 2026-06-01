@@ -1,35 +1,11 @@
 import { z } from "zod";
-
-const optionalString = z
-  .union([z.string(), z.undefined(), z.null()])
-  .transform((v) =>
-    typeof v === "string" && v.trim() !== "" ? v.trim() : null,
-  );
+import { userUpdateBaseSchema, optionalString } from "./users";
 
 function cleanIban(value: string): string {
   return value.replace(/\s+/g, "").toUpperCase();
 }
 
-export const trainerUpdateSchema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, "Voornaam is verplicht")
-    .max(100, "Maximaal 100 tekens"),
-  lastName: z
-    .string()
-    .trim()
-    .min(1, "Achternaam is verplicht")
-    .max(100, "Maximaal 100 tekens"),
-  email: z
-    .string()
-    .trim()
-    .min(1, "E-mail is verplicht")
-    .email("Ongeldig e-mailadres")
-    .max(255, "Maximaal 255 tekens"),
-  phone: optionalString.pipe(
-    z.string().max(50, "Maximaal 50 tekens").nullable(),
-  ),
+export const trainerUpdateSchema = userUpdateBaseSchema.extend({
   trainerRate: optionalString.pipe(
     z
       .string()
