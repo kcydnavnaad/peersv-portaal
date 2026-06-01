@@ -57,3 +57,22 @@ export function flattenZodErrors(
   }
   return out;
 }
+
+export function parseUserCreateForm(formData: FormData) {
+  return userCreateBaseSchema.safeParse({
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
+    password: formData.get("password"),
+  });
+}
+
+export function valuesFromUserFormData(formData: FormData): Record<string, string> {
+  return {
+    firstName: String(formData.get("firstName") ?? ""),
+    lastName: String(formData.get("lastName") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
+  };
+}
