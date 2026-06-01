@@ -7,7 +7,7 @@ import { performances, users } from "@/db/schema";
 import {
   calculateYearTotal,
   getCapStatus,
-  PAYMENT_CAP_YEARLY,
+  getPaymentCapYearly,
   type CapStatus,
 } from "@/lib/payment-cap";
 
@@ -61,12 +61,13 @@ export async function previewYearTotalAfterPayment(
 
   const year = new Date(perf.performanceDate).getFullYear();
   const yearTotal = await calculateYearTotal(perf.userId, year);
+  const cap = await getPaymentCapYearly();
 
   return {
     trainerName: `${perf.firstName} ${perf.lastName}`,
     yearTotal,
-    status: getCapStatus(yearTotal),
-    cap: PAYMENT_CAP_YEARLY,
+    status: getCapStatus(yearTotal, cap),
+    cap,
   };
 }
 

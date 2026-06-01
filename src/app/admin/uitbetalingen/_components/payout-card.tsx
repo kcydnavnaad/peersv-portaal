@@ -11,6 +11,7 @@ type Props = {
   yearTotal: string;
   monthLabel: string;
   year: number;
+  cap: number;
 };
 
 function capBadge(status: CapStatus) {
@@ -44,8 +45,9 @@ export function PayoutCard({
   yearTotal,
   monthLabel,
   year,
+  cap,
 }: Props) {
-  const status = getCapStatus(Number(yearTotal));
+  const status = getCapStatus(Number(yearTotal), cap);
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">

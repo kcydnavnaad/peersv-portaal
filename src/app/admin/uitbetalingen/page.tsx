@@ -5,7 +5,7 @@ import { performances, users } from "@/db/schema";
 import { formatAmount } from "@/lib/performances";
 import {
   getCapStatus,
-  PAYMENT_CAP_YEARLY,
+  getPaymentCapYearly,
   type CapStatus,
 } from "@/lib/payment-cap";
 import { ExportCsvButton } from "./_components/export-csv-button";
@@ -105,6 +105,7 @@ export default async function PayoutsPage({
     year: now.getFullYear(),
     month: now.getMonth() + 1,
   });
+  const cap = await getPaymentCapYearly();
 
   const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
   const monthEnd =
@@ -146,7 +147,7 @@ export default async function PayoutsPage({
           </h1>
           <p className="mt-1 text-sm text-slate-600">
             Plafond per kalenderjaar:{" "}
-            {formatAmount(PAYMENT_CAP_YEARLY.toFixed(2))} per trainer.
+            {formatAmount(cap.toFixed(2))} per trainer.
           </p>
         </div>
         <ExportCsvButton year={year} month={month} />
@@ -175,7 +176,7 @@ export default async function PayoutsPage({
             <tbody className="divide-y divide-slate-100">
               {rows.map((r) => {
                 const yt = Number(r.yearTotal);
-                const status = getCapStatus(yt);
+                const status = getCapStatus(yt, cap);
                 return (
                   <tr key={r.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 font-medium">
@@ -228,6 +229,7 @@ export default async function PayoutsPage({
               yearTotal={r.yearTotal}
               monthLabel={monthLabel}
               year={year}
+              cap={cap}
             />
           ))}
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
