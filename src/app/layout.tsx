@@ -80,6 +80,12 @@ export default async function RootLayout({
                         <Link href="/admin/uitbetalingen" className="hover:underline">
                           Uitbetalingen
                         </Link>
+                        <Link
+                          href="/admin/instellingen"
+                          className="hover:underline"
+                        >
+                          Instellingen
+                        </Link>
                       </>
                     )}
                     <span className="text-slate-400">|</span>
@@ -97,6 +103,7 @@ export default async function RootLayout({
                               { href: "/admin/users", label: "Gebruikers" },
                               { href: "/admin/prestaties", label: "Prestaties" },
                               { href: "/admin/uitbetalingen", label: "Uitbetalingen" },
+                              { href: "/admin/instellingen", label: "Instellingen" },
                             ]
                           : [{ href: "/dashboard", label: "Dashboard" }]
                       }
