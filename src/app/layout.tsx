@@ -81,6 +81,12 @@ export default async function RootLayout({
                           Uitbetalingen
                         </Link>
                         <Link
+                          href="/admin/events"
+                          className="hover:underline"
+                        >
+                          Kalender
+                        </Link>
+                        <Link
                           href="/admin/instellingen"
                           className="hover:underline"
                         >
@@ -103,6 +109,7 @@ export default async function RootLayout({
                               { href: "/admin/users", label: "Gebruikers" },
                               { href: "/admin/prestaties", label: "Prestaties" },
                               { href: "/admin/uitbetalingen", label: "Uitbetalingen" },
+                              { href: "/admin/events", label: "Kalender" },
                               { href: "/admin/instellingen", label: "Instellingen" },
                             ]
                           : [{ href: "/dashboard", label: "Dashboard" }]
