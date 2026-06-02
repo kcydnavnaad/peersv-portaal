@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Readex_Pro } from "next/font/google";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AdminMenu } from "./_components/AdminMenu";
 import { EnvironmentBadge } from "./_components/EnvironmentBadge";
 import { MobileNav } from "./_components/MobileNav";
 import { UserMenu } from "./_components/UserMenu";
@@ -71,27 +72,22 @@ export default async function RootLayout({
                         <Link href="/admin/teams" className="hover:underline">
                           Teams
                         </Link>
-                        <Link href="/admin/users" className="hover:underline">
-                          Gebruikers
-                        </Link>
                         <Link href="/admin/prestaties" className="hover:underline">
                           Prestaties
                         </Link>
                         <Link href="/admin/uitbetalingen" className="hover:underline">
                           Uitbetalingen
                         </Link>
-                        <Link
-                          href="/admin/events"
-                          className="hover:underline"
-                        >
+                        <Link href="/admin/events" className="hover:underline">
                           Kalender
                         </Link>
-                        <Link
-                          href="/admin/instellingen"
-                          className="hover:underline"
-                        >
-                          Instellingen
-                        </Link>
+                        <AdminMenu
+                          label="Beheer"
+                          items={[
+                            { href: "/admin/users", label: "Gebruikers" },
+                            { href: "/admin/instellingen", label: "Instellingen" },
+                          ]}
+                        />
                       </>
                     )}
                     <span className="text-slate-400">|</span>
@@ -106,10 +102,11 @@ export default async function RootLayout({
                               { href: "/dashboard", label: "Dashboard" },
                               { href: "/leden", label: "Leden" },
                               { href: "/admin/teams", label: "Teams" },
-                              { href: "/admin/users", label: "Gebruikers" },
                               { href: "/admin/prestaties", label: "Prestaties" },
                               { href: "/admin/uitbetalingen", label: "Uitbetalingen" },
                               { href: "/admin/events", label: "Kalender" },
+                              { separator: true, label: "Beheer" },
+                              { href: "/admin/users", label: "Gebruikers" },
                               { href: "/admin/instellingen", label: "Instellingen" },
                             ]
                           : [{ href: "/dashboard", label: "Dashboard" }]

@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-type NavLink = {
-  href: string;
-  label: string;
-};
+type NavItem =
+  | { href: string; label: string }
+  | { separator: true; label: string };
 
 type Props = {
-  links: NavLink[];
+  links: NavItem[];
 };
 
 export function MobileNav({ links }: Props) {
@@ -77,17 +76,29 @@ export function MobileNav({ links }: Props) {
           role="menu"
           className="absolute left-0 right-0 top-full mt-0 border-t border-slate-200 bg-white shadow-lg z-20"
         >
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="block border-b border-slate-100 px-6 py-4 text-base text-slate-700 hover:bg-slate-50"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link, idx) => {
+            if ("separator" in link) {
+              return (
+                <div
+                  key={`sep-${idx}`}
+                  className="border-b border-slate-200 bg-slate-50 px-6 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  {link.label}
+                </div>
+              );
+            }
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block border-b border-slate-100 px-6 py-4 text-base text-slate-700 hover:bg-slate-50"
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
