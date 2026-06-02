@@ -31,6 +31,19 @@ export const performanceStatusEnum = pgEnum("performance_status", [
   "paid",
 ]);
 
+export const eventTypeEnum = pgEnum("event_type", [
+  "training",
+  "match",
+  "meeting",
+  "tournament",
+  "other",
+]);
+
+export const eventStatusEnum = pgEnum("event_status", [
+  "scheduled",
+  "cancelled",
+]);
+
 export const members = pgTable("members", {
   id: serial("id").primaryKey(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
@@ -90,6 +103,7 @@ export const teams = pgTable(
     seasonId: integer("season_id")
       .notNull()
       .references(() => seasons.id, { onDelete: "cascade" }),
+    calendarToken: varchar("calendar_token", { length: 48 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -131,6 +145,29 @@ export const teamMembers = pgTable(
     unique("team_members_team_member_active_unique").on(t.teamId, t.memberId, t.leftAt),
   ],
 );
+
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  type: eventTypeEnum("type").notNull().default("training"),
+  status: eventStatusEnum("status").notNull().default("scheduled"),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+  allDay: boolean("all_day").notNull().default(false),
+  location: varchar("location", { length: 200 }),
+  teamId: integer("team_id").references(() => teams.id, { onDelete: "cascade" }),
+  seriesId: varchar("series_id", { length: 36 }),
+  createdBy: integer("created_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 export const settings = pgTable("settings", {
   key: varchar("key", { length: 100 }).primaryKey(),
