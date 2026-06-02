@@ -9,6 +9,7 @@ import {
   type CapStatus,
 } from "@/lib/payment-cap";
 import { ExportCsvButton } from "./_components/export-csv-button";
+import { MarkMonthPaidButton } from "./_components/mark-month-paid-button";
 import { MonthFilter } from "./_components/month-filter";
 import { PayoutCard } from "./_components/payout-card";
 
@@ -193,12 +194,21 @@ export default async function PayoutsPage({
                     </td>
                     <td className="px-4 py-3">{capBadge(status)}</td>
                     <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/admin/prestaties?trainer=${r.id}&period=month`}
-                        className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-50"
-                      >
-                        Bekijk prestaties
-                      </Link>
+                      <div className="inline-flex gap-2">
+                        <MarkMonthPaidButton
+                          trainerId={r.id}
+                          year={year}
+                          month={month}
+                          monthLabel={monthLabel}
+                          hasOpen={Number(r.openMonth) > 0}
+                        />
+                        <Link
+                          href={`/admin/prestaties?trainer=${r.id}&period=month`}
+                          className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-50"
+                        >
+                          Bekijk prestaties
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -229,6 +239,7 @@ export default async function PayoutsPage({
               yearTotal={r.yearTotal}
               monthLabel={monthLabel}
               year={year}
+              month={month}
               cap={cap}
             />
           ))}

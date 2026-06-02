@@ -1,6 +1,7 @@
 "use server";
 
 import { and, asc, eq, gte, lt, sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { performances, users } from "@/db/schema";
@@ -137,4 +138,102 @@ export async function exportPayoutsCsv(
 
   const filename = `uitbetalingen-${year}-${String(month).padStart(2, "0")}.csv`;
   return { csv: lines.join("\n") + "\n", filename };
+}
+
+export async function previewMarkTrainerMonthAsPaid(
+  trainerId: number,
+  year: number,
+  month: number,
+): Promise<{
+  trainerName: string;
+  count: number;
+  totalAmount: number;
+  yearTotalAfter: number;
+  cap: number;
+  statusAfter: CapStatus;
+}> {
+  await requireAdmin();
+
+  const [trainer] = await db
+    .select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+    })
+    .from(users)
+    .where(and(eq(users.id, trainerId), eq(users.role, "trainer")))
+    .limit(1);
+
+  if (!trainer) {
+    throw new Error("Trainer not found");
+  }
+
+  const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+  const monthEnd =
+    month === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+
+  // Som van openstaande prestaties in deze maand voor deze trainer
+  const [agg] = await db
+    .select({
+      count: sql<number>`count(${performances.id})::int`,
+      total: sql<string>`coalesce(sum(${performances.amount}), 0)`,
+    })
+    .from(performances)
+    .where(
+      and(
+        eq(performances.userId, trainerId),
+        eq(performances.status, "open"),
+        gte(performances.performanceDate, monthStart),
+        lt(performances.performanceDate, monthEnd),
+      ),
+    );
+
+  const yearTotalAfter = await calculateYearTotal(trainerId, year);
+  // Note: yearTotalAfter al inclusief deze maand, want status maakt niet uit voor jaartotaal
+  // (calculateYearTotal somt alle performances ongeacht status)
+
+  const cap = await getPaymentCapYearly();
+
+  return {
+    trainerName: `${trainer.firstName} ${trainer.lastName}`,
+    count: Number(agg?.count ?? 0),
+    totalAmount: Number(agg?.total ?? 0),
+    yearTotalAfter,
+    cap,
+    statusAfter: getCapStatus(yearTotalAfter, cap),
+  };
+}
+
+export async function markTrainerMonthAsPaid(
+  trainerId: number,
+  year: number,
+  month: number,
+): Promise<{ updated: number }> {
+  await requireAdmin();
+
+  const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+  const monthEnd =
+    month === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+
+  const result = await db
+    .update(performances)
+    .set({ status: "paid", updatedAt: new Date() })
+    .where(
+      and(
+        eq(performances.userId, trainerId),
+        eq(performances.status, "open"),
+        gte(performances.performanceDate, monthStart),
+        lt(performances.performanceDate, monthEnd),
+      ),
+    )
+    .returning({ id: performances.id });
+
+  revalidatePath("/admin/uitbetalingen");
+  revalidatePath("/admin/prestaties");
+
+  return { updated: result.length };
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatAmount } from "@/lib/performances";
 import { getCapStatus, type CapStatus } from "@/lib/payment-cap";
+import { MarkMonthPaidButton } from "./mark-month-paid-button";
 
 type Props = {
   id: number;
@@ -11,6 +12,7 @@ type Props = {
   yearTotal: string;
   monthLabel: string;
   year: number;
+  month: number;
   cap: number;
 };
 
@@ -45,6 +47,7 @@ export function PayoutCard({
   yearTotal,
   monthLabel,
   year,
+  month,
   cap,
 }: Props) {
   const status = getCapStatus(Number(yearTotal), cap);
@@ -71,7 +74,14 @@ export function PayoutCard({
           {formatAmount(yearTotal)}
         </dd>
       </dl>
-      <div className="mt-3 flex justify-end">
+      <div className="mt-3 flex flex-wrap justify-end gap-2">
+        <MarkMonthPaidButton
+          trainerId={id}
+          year={year}
+          month={month}
+          monthLabel={monthLabel}
+          hasOpen={Number(openMonth) > 0}
+        />
         <Link
           href={`/admin/prestaties?trainer=${id}&period=month`}
           className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-50"
