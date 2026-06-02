@@ -1,11 +1,22 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { settings } from "@/db/schema";
 import { getPaymentCapYearly } from "@/lib/payment-cap";
 import { updateSettings } from "@/app/actions/settings";
+import { CalendarUrlSection } from "../_components/calendar-url-section";
 import { SettingsForm } from "./_components/settings-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const currentCap = await getPaymentCapYearly();
+
+  const [tokenRow] = await db
+    .select({ value: settings.value })
+    .from(settings)
+    .where(eq(settings.key, "club_calendar_token"))
+    .limit(1);
+  const clubToken = tokenRow?.value ?? null;
 
   return (
     <div className="space-y-6">
@@ -21,6 +32,10 @@ export default async function SettingsPage() {
           action={updateSettings}
           defaults={{ paymentCapYear: currentCap.toFixed(2) }}
         />
+      </div>
+
+      <div className="max-w-2xl">
+        <CalendarUrlSection scope="club" initialToken={clubToken} />
       </div>
     </div>
   );

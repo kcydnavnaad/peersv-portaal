@@ -7,6 +7,7 @@ import {
 } from "@/app/actions/team-trainers";
 import { db } from "@/db";
 import { attendances, members, performances, seasons, teamMembers, teamTrainers, teams, users } from "@/db/schema";
+import { CalendarUrlSection } from "../../_components/calendar-url-section";
 import { DeleteTeamButton } from "../_components/delete-team-button";
 import { TeamAttendanceSection } from "../_components/team-attendance-section";
 import { TeamMembersSection } from "../_components/team-members-section";
@@ -31,6 +32,7 @@ export default async function TeamDetailPage({
       seasonId: teams.seasonId,
       seasonName: seasons.name,
       createdAt: teams.createdAt,
+      calendarToken: teams.calendarToken,
       trainerCount: sql<number>`count(${teamTrainers.id})::int`,
     })
     .from(teams)
@@ -278,6 +280,12 @@ export default async function TeamDetailPage({
         performances={recentPerformances}
         memberStats={memberStats}
         matrix={matrix}
+      />
+
+      <CalendarUrlSection
+        scope="team"
+        teamId={team.id}
+        initialToken={team.calendarToken}
       />
     </div>
   );
