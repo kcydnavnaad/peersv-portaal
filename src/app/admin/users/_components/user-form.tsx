@@ -26,6 +26,7 @@ export function UserForm({ action, cancelHref }: Props) {
 
   const [role, setRole] = useState<UserRole>("trainer");
   const [passwordValue, setPasswordValue] = useState("");
+  const [inviteMode, setInviteMode] = useState(true); // default = invite
 
   const v = (key: string, fallback?: string | null) =>
     state.values?.[key] ?? fallback ?? "";
@@ -79,6 +80,45 @@ export function UserForm({ action, cancelHref }: Props) {
             ? "Een admin heeft volledige toegang tot het beheer."
             : "Een trainer kan prestaties registreren voor zijn/haar teams."}
         </p>
+      </div>
+
+      {/* Aanmaak-methode */}
+      <div>
+        <span className={labelCls}>Aanmaak-methode</span>
+        <div className="mt-2 space-y-2">
+          <label className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-300 bg-white p-3 hover:bg-slate-50">
+            <input
+              type="radio"
+              name="inviteMode"
+              value="invite"
+              checked={inviteMode}
+              onChange={() => setInviteMode(true)}
+              className="mt-1 size-4"
+            />
+            <div className="flex-1 text-sm">
+              <div className="font-medium">Stuur uitnodiging via email</div>
+              <div className="text-xs text-slate-500">
+                De gebruiker krijgt een email met een setup-link en kiest zelf een wachtwoord.
+              </div>
+            </div>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-300 bg-white p-3 hover:bg-slate-50">
+            <input
+              type="radio"
+              name="inviteMode"
+              value="direct"
+              checked={!inviteMode}
+              onChange={() => setInviteMode(false)}
+              className="mt-1 size-4"
+            />
+            <div className="flex-1 text-sm">
+              <div className="font-medium">Geef wachtwoord direct mee</div>
+              <div className="text-xs text-slate-500">
+                Stel zelf een initieel wachtwoord in. Handig voor face-to-face onboarding.
+              </div>
+            </div>
+          </label>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -203,39 +243,41 @@ export function UserForm({ action, cancelHref }: Props) {
         </>
       )}
 
-      {/* Wachtwoord met genereer-knop */}
-      <div>
-        <label htmlFor="password" className={labelCls}>
-          Initieel wachtwoord *
-        </label>
-        <div className="mt-1 flex gap-2">
-          <input
-            id="password"
-            name="password"
-            type="text"
-            required
-            minLength={8}
-            value={passwordValue}
-            onChange={(e) => setPasswordValue(e.target.value)}
-            className={inputCls}
-            autoComplete="new-password"
-          />
-          <button
-            type="button"
-            onClick={handleGeneratePassword}
-            className="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50"
-          >
-            Genereer
-          </button>
+      {/* Wachtwoord met genereer-knop, alleen tonen in direct mode */}
+      {!inviteMode && (
+        <div>
+          <label htmlFor="password" className={labelCls}>
+            Initieel wachtwoord *
+          </label>
+          <div className="mt-1 flex gap-2">
+            <input
+              id="password"
+              name="password"
+              type="text"
+              required
+              minLength={8}
+              value={passwordValue}
+              onChange={(e) => setPasswordValue(e.target.value)}
+              className={inputCls}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={handleGeneratePassword}
+              className="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50"
+            >
+              Genereer
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Minstens 8 karakters. Geef dit door aan de gebruiker; je ziet het
+            nadien niet meer.
+          </p>
+          {state.errors?.password && (
+            <p className={errorCls}>{state.errors.password}</p>
+          )}
         </div>
-        <p className="mt-1 text-xs text-slate-500">
-          Minstens 8 karakters. Geef dit door aan de gebruiker; je ziet het
-          nadien niet meer.
-        </p>
-        {state.errors?.password && (
-          <p className={errorCls}>{state.errors.password}</p>
-        )}
-      </div>
+      )}
 
       <div className="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
         <Link

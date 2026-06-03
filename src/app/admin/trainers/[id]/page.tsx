@@ -14,11 +14,12 @@ export default async function TrainerDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ created?: string }>;
+  searchParams: Promise<{ created?: string; invited?: string }>;
 }) {
   const { id } = await params;
   const sp = await searchParams;
   const justCreated = sp.created === "1";
+  const justInvited = sp.invited === "1";
   const userId = Number(id);
   if (!Number.isFinite(userId)) notFound();
 
@@ -37,8 +38,9 @@ export default async function TrainerDetailPage({
     <div className="space-y-6">
       {justCreated && (
         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Trainer aangemaakt. Vergeet niet het initiële wachtwoord door te geven
-          aan de trainer.
+          {justInvited
+            ? "Trainer aangemaakt. Een uitnodigingsemail is verstuurd."
+            : "Trainer aangemaakt. Vergeet niet het initiële wachtwoord door te geven aan de trainer."}
         </div>
       )}
       {isDeactivated && (

@@ -14,7 +14,7 @@ type RoleFilter = "all" | "admin" | "trainer";
 export default async function UsersListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; role?: string; created?: string }>;
+  searchParams: Promise<{ view?: string; role?: string; created?: string; invited?: string }>;
 }) {
   const sp = await searchParams;
   const view: ViewMode =
@@ -67,7 +67,9 @@ export default async function UsersListPage({
     <div className="space-y-6">
       {created && (
         <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Gebruiker aangemaakt. Vergeet niet het initiële wachtwoord door te geven.
+          {sp.invited === "1"
+            ? "Gebruiker aangemaakt. Een uitnodigingsemail is verstuurd."
+            : "Gebruiker aangemaakt. Vergeet niet het initiële wachtwoord door te geven."}
         </p>
       )}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
