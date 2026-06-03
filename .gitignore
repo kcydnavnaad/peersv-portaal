@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 public/sw.js
 public/swe-worker-*.js
+
+# Block stray CSV exports in repo root (Microsoft Entra exports etc)
+/*.csv
