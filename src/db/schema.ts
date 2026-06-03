@@ -44,6 +44,11 @@ export const eventStatusEnum = pgEnum("event_status", [
   "cancelled",
 ]);
 
+export const emailTokenPurposeEnum = pgEnum("email_token_purpose", [
+  "password_reset",
+  "invite",
+]);
+
 export const members = pgTable("members", {
   id: serial("id").primaryKey(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
@@ -165,6 +170,20 @@ export const events = pgTable("events", {
     .defaultNow()
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const emailTokens = pgTable("email_tokens", {
+  id: serial("id").primaryKey(),
+  purpose: emailTokenPurposeEnum("purpose").notNull(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
