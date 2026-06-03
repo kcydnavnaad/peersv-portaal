@@ -74,6 +74,7 @@ Aandacht: deze release brengt externe gebruikers naar het systeem. Mag pas live 
 - Parent-rol toegevoegd aan user_role enum
 - Volunteer-rol toegevoegd
 - `guardians` tabel: koppelt parent-users aan members (één parent kan meerdere kinderen hebben)
+- **Multi-role per user**: één persoon kan meerdere rollen tegelijk hebben (Admin én Trainer, Trainer én Ouder, etc.). Vandaag dwingt het schema dubbele accounts af (bv. Bram Van Eygen heeft 2 accounts). Migratie van users.role naar user_roles many-to-many tabel. Refactor van alle role-checks (session.user.role === "admin" wordt session.user.roles.includes("admin")).
 
 ### Ouder-toegang
 - Ouder login
