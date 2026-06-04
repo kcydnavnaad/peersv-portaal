@@ -1,6 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
+import { and, eq, isNull } from "drizzle-orm";
 import { authenticator } from "otplib";
 import * as QRCode from "qrcode";
+import { db } from "@/db";
+import { mfaRecoveryCodes } from "@/db/schema";
 
 authenticator.options = {
   window: 1,
@@ -52,4 +55,28 @@ export function generateRecoveryCodes(): {
 
 export function hashRecoveryCode(code: string): string {
   return createHash("sha256").update(code.toUpperCase().trim()).digest("hex");
+}
+
+export async function consumeRecoveryCode(
+  userId: number,
+  code: string,
+): Promise<boolean> {
+  const normalized = code.toUpperCase().trim();
+  if (!/^[A-F0-9]{4}-[A-F0-9]{4}$/.test(normalized)) return false;
+
+  const codeHash = hashRecoveryCode(normalized);
+
+  const result = await db
+    .update(mfaRecoveryCodes)
+    .set({ usedAt: new Date() })
+    .where(
+      and(
+        eq(mfaRecoveryCodes.userId, userId),
+        eq(mfaRecoveryCodes.codeHash, codeHash),
+        isNull(mfaRecoveryCodes.usedAt),
+      ),
+    )
+    .returning({ id: mfaRecoveryCodes.id });
+
+  return result.length > 0;
 }

@@ -14,6 +14,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "E-mail", type: "email" },
         password: { label: "Wachtwoord", type: "password" },
+        mfaCode: { label: "MFA code", type: "text" },
       },
       async authorize(creds) {
         const email = creds?.email as string | undefined;
@@ -31,6 +32,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
+
+        if (user.mfaEnabled) {
+          const mfaCode = (creds?.mfaCode as string | undefined)?.trim() ?? "";
+          if (!mfaCode) {
+            throw new Error("MFA_REQUIRED");
+          }
+
+          let mfaOk = false;
+          const normalized = mfaCode.replace(/\s+/g, "");
+          if (/^\d{6}$/.test(normalized) && user.mfaSecret) {
+            const { verifyTotp } = await import("@/lib/mfa");
+            mfaOk = verifyTotp(normalized, user.mfaSecret);
+          }
+
+          if (!mfaOk) {
+            const { consumeRecoveryCode } = await import("@/lib/mfa");
+            mfaOk = await consumeRecoveryCode(user.id, normalized);
+          }
+
+          if (!mfaOk) return null;
+        }
 
         // Update last_login_at (fire-and-forget, geen reden om login te blokkeren als update faalt)
         try {
