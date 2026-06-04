@@ -25,14 +25,63 @@ function addDays(date: Date, days: number): Date {
   return d;
 }
 
+const CLUB_TIMEZONE = "Europe/Brussels";
+
 /**
- * Combineer datetime-local string (lokaal) naar Date object (UTC).
- * Datetime-local heeft geen TZ-info, we interpreteren als lokale browser tijd.
+ * Parse een datetime-local string ("YYYY-MM-DDTHH:mm" of met seconden) en
+ * interpreteer hem expliciet als Europe/Brussels tijd. Returnt een UTC Date.
+ *
+ * Reden: new Date(value) zonder TZ-suffix interpreteert als lokale server-tijd.
+ * Op K8s pods is dat meestal UTC (geen tzdata in alpine image), wat tot
+ * een offset van 1-2 uur leidt. Door hier expliciet als Brussels te parsen
+ * zijn we onafhankelijk van de server-OS configuratie.
  */
 function parseDateTimeLocal(value: string): Date {
-  // value: "2026-09-15T18:00" of "2026-09-15T18:00:00"
-  // new Date(value) interpreteert dit als lokale tijd, wat we willen.
-  return new Date(value);
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/,
+  );
+  if (!match) {
+    throw new Error(`Invalid datetime-local string: ${value}`);
+  }
+  const [, year, month, day, hour, minute, second] = match;
+
+  const naiveUtc = Date.UTC(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    second ? Number(second) : 0,
+  );
+
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone: CLUB_TIMEZONE,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  const parts = dtf.formatToParts(new Date(naiveUtc));
+  const lookup: Record<string, string> = {};
+  for (const p of parts) {
+    if (p.type !== "literal") lookup[p.type] = p.value;
+  }
+
+  const localUtc = Date.UTC(
+    Number(lookup.year),
+    Number(lookup.month) - 1,
+    Number(lookup.day),
+    Number(lookup.hour),
+    Number(lookup.minute),
+    Number(lookup.second),
+  );
+
+  const offset = localUtc - naiveUtc;
+  return new Date(naiveUtc - offset);
 }
 
 export async function createEvent(
