@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   cancelEvent,
@@ -75,6 +76,11 @@ export function EventDetailActions({
 
   return (
     <div className="flex flex-wrap gap-2">
+      {!isCancelled && (
+        <Link href={`/admin/events/${eventId}/bewerken`} className={btnCls}>
+          Bewerken
+        </Link>
+      )}
       {!isCancelled ? (
         <button onClick={handleCancel} disabled={pending} className={btnCls}>
           Annuleren
