@@ -79,6 +79,9 @@ export const users = pgTable("users", {
   trainerRate: decimal("trainer_rate", { precision: 10, scale: 2 }),
   iban: text("iban"),
   deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+  mfaEnabled: boolean("mfa_enabled").default(false).notNull(),
+  mfaSecret: varchar("mfa_secret", { length: 64 }),
+  mfaRequired: boolean("mfa_required").default(false).notNull(),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -182,6 +185,18 @@ export const emailTokens = pgTable("email_tokens", {
     .references(() => users.id, { onDelete: "cascade" }),
   tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const mfaRecoveryCodes = pgTable("mfa_recovery_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  codeHash: varchar("code_hash", { length: 64 }).notNull(),
   usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
