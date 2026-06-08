@@ -8,6 +8,7 @@ import {
   getPaymentCapYearly,
   type CapStatus,
 } from "@/lib/payment-cap";
+import { actsAsTrainer } from "@/lib/users";
 import { ExportCsvButton } from "./_components/export-csv-button";
 import { MarkMonthPaidButton } from "./_components/mark-month-paid-button";
 import { MonthFilter } from "./_components/month-filter";
@@ -130,7 +131,7 @@ export default async function PayoutsPage({
     })
     .from(users)
     .leftJoin(performances, eq(performances.userId, users.id))
-    .where(eq(users.role, "trainer"))
+    .where(actsAsTrainer())
     .groupBy(users.id)
     .orderBy(
       desc(sql`coalesce(sum(case when ${performances.status} = 'open' and ${performances.performanceDate} >= ${monthStart} and ${performances.performanceDate} < ${monthEnd} then ${performances.amount} end), 0)`),

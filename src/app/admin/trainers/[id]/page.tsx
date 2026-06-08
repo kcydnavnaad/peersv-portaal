@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { formatIban, formatRate } from "@/lib/trainers";
+import { actsAsTrainer } from "@/lib/users";
 import { AdminResetMfaButton } from "../_components/AdminResetMfaButton";
 import { ResetPasswordButton } from "../_components/ResetPasswordButton";
 import { ToggleActivationButton } from "../_components/ToggleActivationButton";
@@ -27,7 +28,7 @@ export default async function TrainerDetailPage({
   const [trainer] = await db
     .select()
     .from(users)
-    .where(and(eq(users.id, userId), eq(users.role, "trainer")))
+    .where(and(eq(users.id, userId), actsAsTrainer()))
     .limit(1);
 
   if (!trainer) notFound();

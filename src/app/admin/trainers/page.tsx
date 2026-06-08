@@ -3,6 +3,7 @@ import { and, asc, eq, isNull, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { formatIban, formatRate } from "@/lib/trainers";
+import { actsAsTrainer } from "@/lib/users";
 import { TrainerCard } from "./_components/trainer-card";
 import { TrainerRow } from "./_components/trainer-row";
 
@@ -19,7 +20,7 @@ export default async function TrainersListPage({
   const view: ViewMode =
     sp.view === "deactivated" || sp.view === "all" ? sp.view : "active";
 
-  const baseFilter = eq(users.role, "trainer");
+  const baseFilter = actsAsTrainer();
   const filter =
     view === "active"
       ? and(baseFilter, isNull(users.deactivatedAt))

@@ -13,6 +13,7 @@ import {
   performanceStatusLabel,
   performanceTypeLabel,
 } from "@/lib/performances";
+import { actsAsTrainer } from "@/lib/users";
 import { FiltersBar } from "./_components/filters-bar";
 import { PaymentToggleButton } from "./_components/payment-toggle-button";
 import { PerformanceCard } from "./_components/performance-card";
@@ -75,7 +76,7 @@ export default async function AdminPerformancesListPage({
         name: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
       })
       .from(users)
-      .where(eq(users.role, "trainer"))
+      .where(actsAsTrainer())
       .orderBy(asc(users.lastName), asc(users.firstName)),
     db
       .select({

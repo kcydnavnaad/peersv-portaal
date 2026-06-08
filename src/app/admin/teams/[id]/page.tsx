@@ -7,6 +7,7 @@ import {
 } from "@/app/actions/team-trainers";
 import { db } from "@/db";
 import { attendances, members, performances, seasons, teamMembers, teamTrainers, teams, users } from "@/db/schema";
+import { actsAsTrainer } from "@/lib/users";
 import { CalendarUrlSection } from "../../_components/calendar-url-section";
 import { DeleteTeamButton } from "../_components/delete-team-button";
 import { TeamAttendanceSection } from "../_components/team-attendance-section";
@@ -65,7 +66,7 @@ export default async function TeamDetailPage({
     )
     .where(
       and(
-        eq(users.role, "trainer"),
+        actsAsTrainer(),
         or(isNull(users.deactivatedAt), isNotNull(teamTrainers.id)),
       ),
     )

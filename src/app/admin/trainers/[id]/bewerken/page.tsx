@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { updateTrainer } from "@/app/actions/trainers";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { actsAsTrainer } from "@/lib/users";
 import { TrainerForm } from "../../_components/trainer-form";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function EditTrainerPage({
   const [trainer] = await db
     .select()
     .from(users)
-    .where(and(eq(users.id, userId), eq(users.role, "trainer")))
+    .where(and(eq(users.id, userId), actsAsTrainer()))
     .limit(1);
 
   if (!trainer) notFound();

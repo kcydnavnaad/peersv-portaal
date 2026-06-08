@@ -11,6 +11,7 @@ import {
   getPaymentCapYearly,
   type CapStatus,
 } from "@/lib/payment-cap";
+import { actsAsTrainer } from "@/lib/users";
 
 async function requireAdmin() {
   const session = await auth();
@@ -110,7 +111,7 @@ export async function exportPayoutsCsv(
         lt(performances.performanceDate, monthEnd),
       ),
     )
-    .where(eq(users.role, "trainer"))
+    .where(actsAsTrainer())
     .groupBy(users.id)
     .having(sql`coalesce(sum(${performances.amount}), 0) > 0`)
     .orderBy(asc(users.lastName), asc(users.firstName));
@@ -161,7 +162,7 @@ export async function previewMarkTrainerMonthAsPaid(
       lastName: users.lastName,
     })
     .from(users)
-    .where(and(eq(users.id, trainerId), eq(users.role, "trainer")))
+    .where(and(eq(users.id, trainerId), actsAsTrainer()))
     .limit(1);
 
   if (!trainer) {

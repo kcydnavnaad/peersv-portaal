@@ -14,6 +14,7 @@ import {
   valuesFromFormData,
   type TrainerFormState,
 } from "@/lib/trainers";
+import { actsAsTrainer } from "@/lib/users";
 import { createUser, requireAdmin } from "./users";
 
 export async function createTrainer(
@@ -33,7 +34,7 @@ export async function updateTrainer(
   const [existing] = await db
     .select()
     .from(users)
-    .where(and(eq(users.id, id), eq(users.role, "trainer")))
+    .where(and(eq(users.id, id), actsAsTrainer()))
     .limit(1);
 
   if (!existing) {
@@ -90,7 +91,7 @@ export async function resetTrainerPassword(
   const [trainer] = await db
     .select()
     .from(users)
-    .where(and(eq(users.id, trainerId), eq(users.role, "trainer")))
+    .where(and(eq(users.id, trainerId), actsAsTrainer()))
     .limit(1);
 
   if (!trainer) {
@@ -122,7 +123,7 @@ export async function toggleTrainerActivation(
   const [trainer] = await db
     .select()
     .from(users)
-    .where(and(eq(users.id, trainerId), eq(users.role, "trainer")))
+    .where(and(eq(users.id, trainerId), actsAsTrainer()))
     .limit(1);
 
   if (!trainer) {
