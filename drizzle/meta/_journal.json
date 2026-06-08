@@ -57,6 +57,13 @@
       "when": 1780591145832,
       "tag": "0008_stiff_rumiko_fujikawa",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780918295798,
+      "tag": "0009_pretty_hedge_knight",
+      "breakpoints": true
     }
   ]
 }

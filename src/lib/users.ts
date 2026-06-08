@@ -1,4 +1,6 @@
+import { eq, or, type SQL } from "drizzle-orm";
 import { z } from "zod";
+import { users } from "@/db/schema";
 
 export const optionalString = z
   .union([z.string(), z.undefined(), z.null()])
@@ -75,4 +77,8 @@ export function valuesFromUserFormData(formData: FormData): Record<string, strin
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
   };
+}
+
+export function actsAsTrainer(): SQL {
+  return or(eq(users.role, "trainer"), eq(users.isAlsoTrainer, true))!;
 }

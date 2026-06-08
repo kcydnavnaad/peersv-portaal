@@ -82,6 +82,7 @@ export const users = pgTable("users", {
   mfaEnabled: boolean("mfa_enabled").default(false).notNull(),
   mfaSecret: varchar("mfa_secret", { length: 64 }),
   mfaRequired: boolean("mfa_required").default(false).notNull(),
+  isAlsoTrainer: boolean("is_also_trainer").default(false).notNull(),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

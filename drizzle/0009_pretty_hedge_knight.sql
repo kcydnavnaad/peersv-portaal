@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "is_also_trainer" boolean DEFAULT false NOT NULL;
