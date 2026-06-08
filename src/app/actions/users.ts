@@ -65,6 +65,7 @@ export async function createUser(
   await requireAdmin();
 
   const inviteMode = formData.get("inviteMode") === "invite";
+  const isAlsoTrainer = formData.get("isAlsoTrainer") === "on";
 
   // Voor trainers gebruiken we het uitgebreide schema (met IBAN/tarief/vlinder).
   // Voor admins gebruiken we het basis-schema.
@@ -174,6 +175,7 @@ export async function createUser(
         phone: parsed.data.phone,
         passwordHash,
         role: "admin",
+        isAlsoTrainer: role === "admin" ? isAlsoTrainer : false,
       })
       .returning({ id: users.id });
     createdId = created.id;

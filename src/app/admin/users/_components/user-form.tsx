@@ -82,6 +82,25 @@ export function UserForm({ action, cancelHref }: Props) {
         </p>
       </div>
 
+      {role === "admin" && (
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="isAlsoTrainer"
+              className="mt-0.5 size-4 rounded border-slate-300"
+            />
+            <span>
+              <span className="font-medium">Deze admin is ook trainer</span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                Vink aan voor bestuursleden die ook training geven (bv. Bram, Joris).
+                Ze verschijnen dan ook in trainer-lijsten en kunnen prestaties registreren.
+              </span>
+            </span>
+          </label>
+        </div>
+      )}
+
       {/* Aanmaak-methode */}
       <div>
         <span className={labelCls}>Aanmaak-methode</span>

@@ -42,6 +42,7 @@ export default async function UsersListPage({
       lastName: users.lastName,
       email: users.email,
       role: users.role,
+      isAlsoTrainer: users.isAlsoTrainer,
       trainerRate: users.trainerRate,
       isButterfly: users.isButterfly,
       iban: users.iban,
@@ -138,9 +139,15 @@ export default async function UsersListPage({
                       </td>
                       <td className={`px-4 py-3 ${rowClass}`}>
                         {u.role === "admin" ? (
-                          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
-                            Admin
-                          </span>
+                          u.isAlsoTrainer ? (
+                            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
+                              Admin + Trainer
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
+                              Admin
+                            </span>
+                          )
                         ) : (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
                             Trainer
@@ -208,7 +215,7 @@ export default async function UsersListPage({
                     </div>
                     {u.role === "admin" ? (
                       <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700 shrink-0">
-                        Admin
+                        {u.isAlsoTrainer ? "Admin + Trainer" : "Admin"}
                       </span>
                     ) : (
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700 shrink-0">
