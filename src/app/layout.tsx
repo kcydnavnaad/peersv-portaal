@@ -81,6 +81,11 @@ export default async function RootLayout({
                         <Link href="/admin/events" className="hover:underline">
                           Kalender
                         </Link>
+                        {session.user.isAlsoTrainer && (
+                          <Link href="/trainer" className="hover:underline">
+                            Trainer modus
+                          </Link>
+                        )}
                         <AdminMenu
                           label="Beheer"
                           items={[
@@ -105,6 +110,9 @@ export default async function RootLayout({
                               { href: "/admin/prestaties", label: "Prestaties" },
                               { href: "/admin/uitbetalingen", label: "Uitbetalingen" },
                               { href: "/admin/events", label: "Kalender" },
+                              ...(session.user.isAlsoTrainer
+                                ? [{ href: "/trainer", label: "Trainer modus" }]
+                                : []),
                               { separator: true, label: "Beheer" },
                               { href: "/admin/users", label: "Gebruikers" },
                               { href: "/admin/instellingen", label: "Instellingen" },
