@@ -90,6 +90,7 @@ export default async function RootLayout({
                           label="Beheer"
                           items={[
                             { href: "/admin/users", label: "Gebruikers" },
+                            { href: "/admin/seasons", label: "Seizoenen" },
                             { href: "/admin/instellingen", label: "Instellingen" },
                           ]}
                         />
@@ -115,6 +116,7 @@ export default async function RootLayout({
                                 : []),
                               { separator: true, label: "Beheer" },
                               { href: "/admin/users", label: "Gebruikers" },
+                              { href: "/admin/seasons", label: "Seizoenen" },
                               { href: "/admin/instellingen", label: "Instellingen" },
                             ]
                           : [{ href: "/dashboard", label: "Dashboard" }]
