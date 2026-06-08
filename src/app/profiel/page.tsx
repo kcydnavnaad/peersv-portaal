@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { mfaRecoveryCodes, users } from "@/db/schema";
 import { logout } from "@/app/actions/auth";
 import { PasswordForm } from "./_components/PasswordForm";
+import { MfaManagementButtons } from "./_components/mfa-management-buttons";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,20 @@ export default async function ProfielPage({
     .where(eq(users.id, userId))
     .limit(1);
   const mfaEnabled = u?.mfaEnabled ?? false;
+
+  let recoveryCodesAvailable = 0;
+  if (mfaEnabled) {
+    const codes = await db
+      .select({ id: mfaRecoveryCodes.id })
+      .from(mfaRecoveryCodes)
+      .where(
+        and(
+          eq(mfaRecoveryCodes.userId, userId),
+          isNull(mfaRecoveryCodes.usedAt),
+        ),
+      );
+    recoveryCodesAvailable = codes.length;
+  }
 
   return (
     <div className="space-y-8">
@@ -71,7 +86,7 @@ export default async function ProfielPage({
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold">Tweefactor authenticatie</h2>
         {mfaEnabled ? (
-          <div className="mt-3 space-y-2">
+          <div className="mt-3 space-y-3">
             <p className="inline-flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800">
               <span className="size-2 rounded-full bg-emerald-500" />
               Actief
@@ -80,10 +95,13 @@ export default async function ProfielPage({
               Bij elk login vraag je portaal om een 6-cijferige code uit je
               authenticator app of een herstelcode.
             </p>
-            <p className="text-xs text-slate-500">
-              Uitschakelen of herstelcodes vernieuwen kan later via de
-              beheer-opties (volgt in een toekomstige update).
+            <p className="text-sm text-slate-600">
+              Je hebt nog <strong>{recoveryCodesAvailable} herstelcodes</strong>{" "}
+              beschikbaar (van 10).
             </p>
+            <MfaManagementButtons
+              recoveryCodesAvailable={recoveryCodesAvailable}
+            />
           </div>
         ) : (
           <div className="mt-3 space-y-3">

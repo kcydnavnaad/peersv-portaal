@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { formatIban, formatRate } from "@/lib/trainers";
+import { AdminResetMfaButton } from "../_components/AdminResetMfaButton";
 import { ResetPasswordButton } from "../_components/ResetPasswordButton";
 import { ToggleActivationButton } from "../_components/ToggleActivationButton";
 
@@ -71,6 +72,12 @@ export default async function TrainerDetailPage({
                 Gedeactiveerd
               </span>
             )}
+            {trainer.mfaEnabled && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-800">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                MFA actief
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -80,6 +87,12 @@ export default async function TrainerDetailPage({
             isDeactivated={isDeactivated}
           />
           <ResetPasswordButton trainerId={trainer.id} trainerName={fullName} />
+          {trainer.mfaEnabled && (
+            <AdminResetMfaButton
+              trainerId={trainer.id}
+              trainerName={fullName}
+            />
+          )}
           <Link
             href={`/admin/trainers/${trainer.id}/bewerken`}
             className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
