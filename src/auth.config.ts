@@ -32,6 +32,7 @@ export const authConfig = {
       if (user) {
         token.id = user.id;
         token.role = user.role as "admin" | "trainer" | undefined;
+        token.isAlsoTrainer = user.isAlsoTrainer ?? false;
       }
       return token;
     },
@@ -39,6 +40,7 @@ export const authConfig = {
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as "admin" | "trainer" | undefined;
+        session.user.isAlsoTrainer = (token.isAlsoTrainer as boolean | undefined) ?? false;
       }
       return session;
     },

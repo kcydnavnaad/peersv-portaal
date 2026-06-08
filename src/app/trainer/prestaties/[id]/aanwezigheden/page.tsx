@@ -50,7 +50,7 @@ export default async function AttendancesPage({
 
   // Trainer check
   if (
-    session.user.role === "trainer" &&
+    (session.user.role === "trainer" || session.user.isAlsoTrainer === true) &&
     perf.userId !== Number(session.user.id)
   ) {
     redirect("/trainer/prestaties");
