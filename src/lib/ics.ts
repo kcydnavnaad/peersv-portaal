@@ -30,6 +30,7 @@ function fmtDate(d: Date): string {
 function escapeIcs(text: string): string {
   return text
     .replace(/\\/g, "\\\\")
+    .replace(/\r/g, "")
     .replace(/\n/g, "\\n")
     .replace(/,/g, "\\,")
     .replace(/;/g, "\\;");
