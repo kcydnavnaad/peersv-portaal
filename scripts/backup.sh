@@ -67,71 +67,84 @@ log "upload complete"
 if [[ -n "${RETENTION_DAYS:-}" ]]; then
   log "cleaning up backups older than ${RETENTION_DAYS} days on ${SSH_HOST} via SFTP"
 
-  cutoff_date=$(date -u -d "-${RETENTION_DAYS} days" +%Y-%m-%d 2>/dev/null || \
-                date -u -v-${RETENTION_DAYS}d +%Y-%m-%d 2>/dev/null || \
-                date -u +%Y-%m-%d)
-
-  set +e
-  listing=$(sftp \
-    -i "$SSH_PRIVATE_KEY_PATH" \
-    -o StrictHostKeyChecking=accept-new \
-    -o UserKnownHostsFile=/tmp/known_hosts \
-    -b - \
-    "${SSH_USER}@${SSH_HOST}" 2>&1 << SFTP_EOF
-cd ${REMOTE_PATH}
-ls -1
-SFTP_EOF
-  )
-  listing_rc=$?
-  set -e
-
-  if [[ $listing_rc -ne 0 ]]; then
-    log "WARNING: SFTP listing failed with exit ${listing_rc}, skipping cleanup this run"
-    log "sftp output: ${listing}"
+  # Bereken cutoff-datum: probeer GNU date, dan BSD date.
+  # Als beide falen: SKIP cleanup (fail-closed, nooit deleten met
+  # onbekende cutoff — zou alle backups verwijderen).
+  cutoff_date=""
+  if cutoff_date=$(date -u -d "-${RETENTION_DAYS} days" +%Y-%m-%d 2>/dev/null); then
+    :
+  elif cutoff_date=$(date -u -v-${RETENTION_DAYS}d +%Y-%m-%d 2>/dev/null); then
+    :
   else
-    to_delete=()
-  while IFS= read -r line; do
-    case "$line" in
-      ${BACKUP_PREFIX}-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*.sql.gz)
-        file_date=$(echo "$line" | sed -n "s/^${BACKUP_PREFIX}-\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)-.*/\1/p")
-        if [[ -n "$file_date" && "$file_date" < "$cutoff_date" ]]; then
-          to_delete+=("$line")
-        fi
-        ;;
-    esac
-  done <<< "$listing"
+    cutoff_date=""
+  fi
 
-  deleted=0
-  if [[ ${#to_delete[@]} -gt 0 ]]; then
-    delete_cmds=""
-    for f in "${to_delete[@]}"; do
-      delete_cmds+="rm ${f}"$'\n'
-    done
-
+  if [[ -z "$cutoff_date" ]]; then
+    log "WARNING: unable to compute cutoff date (GNU date and BSD date both failed)"
+    log "WARNING: skipping cleanup this run to avoid mass deletion"
+  else
     set +e
-    delete_output=$(sftp \
+    listing=$(sftp \
       -i "$SSH_PRIVATE_KEY_PATH" \
       -o StrictHostKeyChecking=accept-new \
       -o UserKnownHostsFile=/tmp/known_hosts \
       -b - \
-      "${SSH_USER}@${SSH_HOST}" 2>&1 << SFTP_DELETE_EOF
+      "${SSH_USER}@${SSH_HOST}" 2>&1 << SFTP_EOF
+cd ${REMOTE_PATH}
+ls -1
+SFTP_EOF
+    )
+    listing_rc=$?
+    set -e
+
+    if [[ $listing_rc -ne 0 ]]; then
+      log "WARNING: SFTP listing failed with exit ${listing_rc}, skipping cleanup this run"
+      log "sftp output: ${listing}"
+    else
+      to_delete=()
+      while IFS= read -r line; do
+        case "$line" in
+          ${BACKUP_PREFIX}-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*.sql.gz)
+            file_date=$(echo "$line" | sed -n "s/^${BACKUP_PREFIX}-\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)-.*/\1/p")
+            if [[ -n "$file_date" && "$file_date" < "$cutoff_date" ]]; then
+              to_delete+=("$line")
+            fi
+            ;;
+        esac
+      done <<< "$listing"
+
+      deleted=0
+      if [[ ${#to_delete[@]} -gt 0 ]]; then
+        delete_cmds=""
+        for f in "${to_delete[@]}"; do
+          delete_cmds+="rm ${f}"$'\n'
+        done
+
+        set +e
+        delete_output=$(sftp \
+          -i "$SSH_PRIVATE_KEY_PATH" \
+          -o StrictHostKeyChecking=accept-new \
+          -o UserKnownHostsFile=/tmp/known_hosts \
+          -b - \
+          "${SSH_USER}@${SSH_HOST}" 2>&1 << SFTP_DELETE_EOF
 cd ${REMOTE_PATH}
 ${delete_cmds}
 SFTP_DELETE_EOF
-    )
-    delete_rc=$?
-    set -e
+        )
+        delete_rc=$?
+        set -e
 
-    if [[ $delete_rc -ne 0 ]]; then
-      log "WARNING: SFTP delete failed with exit ${delete_rc}"
-      log "sftp output: ${delete_output}"
-      deleted=0
-    else
-      deleted=${#to_delete[@]}
+        if [[ $delete_rc -ne 0 ]]; then
+          log "WARNING: SFTP delete failed with exit ${delete_rc}"
+          log "sftp output: ${delete_output}"
+          deleted=0
+        else
+          deleted=${#to_delete[@]}
+        fi
+      fi
+
+      log "cleanup done: ${deleted} file(s) removed (cutoff: ${cutoff_date})"
     fi
-  fi
-
-  log "cleanup done: ${deleted} file(s) removed (cutoff: ${cutoff_date})"
   fi
 else
   log "RETENTION_DAYS not set, skipping cleanup"
