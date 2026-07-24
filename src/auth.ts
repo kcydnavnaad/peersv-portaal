@@ -2,9 +2,15 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { eq, sql } from "drizzle-orm";
+import { headers } from "next/headers";
 import { authConfig } from "./auth.config";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import {
+  extractIpFromHeaders,
+  extractUserAgent,
+  logAuthEvent,
+} from "@/lib/audit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -21,17 +27,53 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = creds?.password as string | undefined;
         if (!email || !password) return null;
 
+        let ipAddress: string | null = null;
+        let userAgent: string | null = null;
+        try {
+          const hdrs = await headers();
+          ipAddress = extractIpFromHeaders(hdrs);
+          userAgent = extractUserAgent(hdrs);
+        } catch {
+          // Outside request context or headers() failed — proceed without
+        }
+
         const [user] = await db
           .select()
           .from(users)
           .where(eq(users.email, email))
           .limit(1);
 
-        if (!user) return null;
-        if (user.deactivatedAt) return null;
+        if (!user) {
+          await logAuthEvent({
+            email,
+            eventType: "login_fail",
+            ipAddress,
+            userAgent,
+          });
+          return null;
+        }
+        if (user.deactivatedAt) {
+          await logAuthEvent({
+            email,
+            eventType: "login_fail",
+            userId: user.id,
+            ipAddress,
+            userAgent,
+          });
+          return null;
+        }
 
         const ok = await bcrypt.compare(password, user.passwordHash);
-        if (!ok) return null;
+        if (!ok) {
+          await logAuthEvent({
+            email,
+            eventType: "login_fail",
+            userId: user.id,
+            ipAddress,
+            userAgent,
+          });
+          return null;
+        }
 
         if (user.mfaEnabled) {
           const mfaCode = (creds?.mfaCode as string | undefined)?.trim() ?? "";
@@ -51,7 +93,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             mfaOk = await consumeRecoveryCode(user.id, normalized);
           }
 
-          if (!mfaOk) return null;
+          if (!mfaOk) {
+            await logAuthEvent({
+              email,
+              eventType: "login_fail_mfa",
+              userId: user.id,
+              ipAddress,
+              userAgent,
+            });
+            return null;
+          }
         }
 
         // Update last_login_at (fire-and-forget, geen reden om login te blokkeren als update faalt)
@@ -63,6 +114,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch (err) {
           console.error("Failed to update last_login_at:", err);
         }
+
+        await logAuthEvent({
+          email: user.email,
+          eventType: "login_success",
+          userId: user.id,
+          ipAddress,
+          userAgent,
+        });
 
         return {
           id: String(user.id),

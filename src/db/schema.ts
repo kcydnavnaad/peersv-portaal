@@ -1,4 +1,5 @@
 import {
+  bigserial,
   boolean,
   date,
   decimal,
@@ -88,6 +89,20 @@ export const users = pgTable("users", {
     .defaultNow()
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const authEvents = pgTable("auth_events", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  userId: integer("user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  email: varchar("email", { length: 255 }).notNull(),
+  eventType: varchar("event_type", { length: 32 }).notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
