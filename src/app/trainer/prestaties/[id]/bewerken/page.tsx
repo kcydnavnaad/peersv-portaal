@@ -20,7 +20,10 @@ export default async function EditPerformancePage({
   if (!Number.isFinite(perfId)) notFound();
 
   const session = await auth();
-  if (session?.user?.role !== "trainer") redirect("/dashboard");
+  const isTrainer =
+    session?.user?.role === "trainer" ||
+    session?.user?.isAlsoTrainer === true;
+  if (!isTrainer) redirect("/dashboard");
   const userId = Number(session.user.id);
 
   const [perf] = await db

@@ -12,7 +12,10 @@ export const dynamic = "force-dynamic";
 
 export default async function NewPerformancePage() {
   const session = await auth();
-  if (session?.user?.role !== "trainer") {
+  const isTrainer =
+    session?.user?.role === "trainer" ||
+    session?.user?.isAlsoTrainer === true;
+  if (!isTrainer) {
     redirect("/dashboard");
   }
 
