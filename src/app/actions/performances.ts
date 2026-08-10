@@ -15,7 +15,10 @@ import {
 
 async function requireTrainer() {
   const session = await auth();
-  if (session?.user?.role !== "trainer") {
+  const isTrainer =
+    session?.user?.role === "trainer" ||
+    session?.user?.isAlsoTrainer === true;
+  if (!isTrainer) {
     throw new Error("Forbidden");
   }
   const userId = Number(session.user.id);

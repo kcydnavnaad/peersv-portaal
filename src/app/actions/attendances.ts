@@ -37,10 +37,10 @@ export async function saveAttendances(
     throw new Error("Prestatie niet gevonden");
   }
 
-  if (
-    session?.user?.role === "trainer" &&
-    perf.userId !== Number(session.user.id)
-  ) {
+  const isTrainer =
+    session?.user?.role === "trainer" ||
+    session?.user?.isAlsoTrainer === true;
+  if (isTrainer && perf.userId !== Number(session.user.id)) {
     throw new Error("Niet jouw prestatie");
   }
 
