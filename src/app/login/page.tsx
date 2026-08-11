@@ -9,12 +9,21 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="mx-auto mt-12 max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="text-2xl font-semibold tracking-tight">Inloggen</h1>
-      <p className="mt-1 mb-6 text-sm text-slate-600">
-        Toegang voor admins en trainers.
-      </p>
-      <LoginForm />
+    <div className="grid min-h-[calc(100vh-8rem)] place-items-center px-4">
+      <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-8 shadow-[var(--shadow-md)]">
+        <div className="mb-6 flex flex-col items-center">
+          <div className="grid size-12 place-items-center rounded-[var(--radius-md)] bg-[color:var(--color-primary)] text-white text-xl font-bold">
+            P
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+            Inloggen
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
+            Toegang voor admins en trainers.
+          </p>
+        </div>
+        <LoginForm />
+      </div>
     </div>
   );
 }

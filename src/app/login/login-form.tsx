@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { authenticate, type AuthenticateResult } from "@/app/actions/auth";
 
+const labelCls =
+  "block text-[13px] font-medium text-[color:var(--color-text)]";
 const inputCls =
-  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
+  "mt-1 block w-full rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-white px-3 py-2.5 text-sm text-[color:var(--color-text)] shadow-[var(--shadow-sm)] focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary)]/20";
 
 export function LoginForm() {
   const [state, formAction, isPending] = useActionState<
@@ -22,7 +24,7 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="email" className={labelCls}>
           E-mail
         </label>
         <input
@@ -34,12 +36,12 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           readOnly={isOnMfaStage}
-          className={`${inputCls} ${isOnMfaStage ? "bg-slate-50" : ""}`}
+          className={`${inputCls} ${isOnMfaStage ? "bg-[color:var(--color-bg)]" : ""}`}
         />
       </div>
 
       <div className={isOnMfaStage ? "hidden" : ""}>
-        <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="password" className={labelCls}>
           Wachtwoord
         </label>
         <input
@@ -60,7 +62,7 @@ export function LoginForm() {
 
       {isOnMfaStage && (
         <div>
-          <label htmlFor="mfaCode" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="mfaCode" className={labelCls}>
             Tweefactor code
           </label>
           <input
@@ -74,14 +76,14 @@ export function LoginForm() {
             placeholder="123 456 of XXXX-XXXX"
             className={`${inputCls} font-mono tracking-widest`}
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
             Voer de 6-cijferige code uit je authenticator app in, of een herstelcode (XXXX-XXXX).
           </p>
         </div>
       )}
 
       {state?.ok === false && state.error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-[var(--radius-sm)] bg-[color:var(--color-danger)]/10 px-3 py-2 text-sm text-[color:var(--color-danger)]">
           {state.error}
         </p>
       )}
@@ -89,14 +91,17 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+        className="w-full rounded-[var(--radius-sm)] bg-[color:var(--color-primary)] px-4 py-2.5 text-sm font-medium text-white shadow-[var(--shadow-sm)] hover:bg-[color:var(--color-primary-hover)] disabled:opacity-50"
       >
         {isPending ? "Bezig..." : isOnMfaStage ? "Verifieer" : "Inloggen"}
       </button>
 
       {!isOnMfaStage && (
         <p className="text-center text-sm">
-          <Link href="/forgot-password" className="text-slate-600 hover:underline">
+          <Link
+            href="/forgot-password"
+            className="text-[color:var(--color-text-muted)] hover:text-[color:var(--color-primary)] hover:underline"
+          >
             Wachtwoord vergeten?
           </Link>
         </p>
