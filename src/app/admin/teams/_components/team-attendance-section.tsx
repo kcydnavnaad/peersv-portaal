@@ -1,7 +1,7 @@
 type Performance = {
   id: number;
   date: string;
-  type: string;
+  activityTypeName: string | null;
 };
 
 type MemberStats = {
@@ -22,11 +22,10 @@ type Props = {
   matrix: Map<string, AttendanceCell>; // key: "memberId-performanceId"
 };
 
-const performanceTypeLabel: Record<string, string> = {
-  training: "T",
-  match: "W",
-  tournament: "T*",
-};
+function activityShortLabel(name: string | null): string {
+  if (!name) return "-";
+  return name.charAt(0).toUpperCase();
+}
 
 function formatShortDate(value: string) {
   return new Date(value).toLocaleDateString("nl-BE", {
@@ -127,11 +126,11 @@ export function TeamAttendanceSection({
                   <th
                     key={p.id}
                     className="whitespace-nowrap px-2 py-2 text-center"
-                    title={`${p.type} - ${p.date}`}
+                    title={`${p.activityTypeName ?? "-"} - ${p.date}`}
                   >
                     <div>{formatShortDate(p.date)}</div>
                     <div className="text-[10px] font-normal text-slate-400">
-                      {performanceTypeLabel[p.type] ?? p.type}
+                      {activityShortLabel(p.activityTypeName)}
                     </div>
                   </th>
                 ))}

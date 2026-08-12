@@ -2,11 +2,10 @@ import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { performances, teams } from "@/db/schema";
+import { activityTypes, performances, teams } from "@/db/schema";
 import {
   formatAmount,
   performanceStatusLabel,
-  performanceTypeLabel,
 } from "@/lib/performances";
 import { PerformanceCard } from "./_components/performance-card";
 import { PerformanceRow } from "./_components/performance-row";
@@ -28,7 +27,7 @@ export default async function PerformancesListPage() {
     ? await db
         .select({
           id: performances.id,
-          type: performances.type,
+          activityTypeName: activityTypes.name,
           performanceDate: performances.performanceDate,
           amount: performances.amount,
           status: performances.status,
@@ -36,6 +35,7 @@ export default async function PerformancesListPage() {
         })
         .from(performances)
         .leftJoin(teams, eq(performances.teamId, teams.id))
+        .leftJoin(activityTypes, eq(activityTypes.id, performances.activityTypeId))
         .where(eq(performances.userId, userId))
         .orderBy(desc(performances.performanceDate), desc(performances.id))
     : [];
@@ -87,7 +87,7 @@ export default async function PerformancesListPage() {
                       {formatDate(p.performanceDate)}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
-                      {performanceTypeLabel[p.type]}
+                      {p.activityTypeName ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       {p.teamName ?? "-"}
@@ -111,7 +111,7 @@ export default async function PerformancesListPage() {
                 key={p.id}
                 id={p.id}
                 performanceDate={p.performanceDate}
-                type={p.type}
+                activityTypeName={p.activityTypeName}
                 amount={p.amount}
                 status={p.status}
                 teamName={p.teamName}

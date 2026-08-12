@@ -6,7 +6,7 @@ import {
   toggleTeamTrainer,
 } from "@/app/actions/team-trainers";
 import { db } from "@/db";
-import { attendances, members, performances, seasons, teamMembers, teamTrainers, teams, users } from "@/db/schema";
+import { activityTypes, attendances, members, performances, seasons, teamMembers, teamTrainers, teams, users } from "@/db/schema";
 import { actsAsTrainer } from "@/lib/users";
 import { CalendarUrlSection } from "../../_components/calendar-url-section";
 import { DeleteTeamButton } from "../_components/delete-team-button";
@@ -111,9 +111,10 @@ export default async function TeamDetailPage({
     .select({
       id: performances.id,
       date: performances.performanceDate,
-      type: performances.type,
+      activityTypeName: activityTypes.name,
     })
     .from(performances)
+    .leftJoin(activityTypes, eq(activityTypes.id, performances.activityTypeId))
     .where(eq(performances.teamId, teamId))
     .orderBy(desc(performances.performanceDate))
     .limit(10);

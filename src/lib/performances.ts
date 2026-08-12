@@ -12,22 +12,16 @@ const today = () => {
   return d;
 };
 
-export const performanceTypes = ["training", "match", "tournament"] as const;
-export type PerformanceType = (typeof performanceTypes)[number];
-
-export const performanceTypeLabel: Record<PerformanceType, string> = {
-  training: "Training",
-  match: "Wedstrijd",
-  tournament: "Tornooi",
-};
-
 export const performanceStatusLabel: Record<"open" | "paid", string> = {
   open: "Open",
   paid: "Betaald",
 };
 
 export const performanceSchema = z.object({
-  type: z.enum(performanceTypes, { message: "Kies een type" }),
+  activityTypeId: z.coerce
+    .number({ message: "Kies een type" })
+    .int()
+    .positive("Kies een type"),
   performanceDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Ongeldige datum")
@@ -51,7 +45,7 @@ export type PerformanceFormState = {
 
 export function parsePerformanceForm(formData: FormData) {
   const raw = {
-    type: formData.get("type"),
+    activityTypeId: formData.get("activityTypeId"),
     performanceDate: formData.get("performanceDate"),
     team: formData.get("team"),
     notes: formData.get("notes"),
@@ -72,7 +66,7 @@ export function flattenZodErrors(
 
 export function valuesFromFormData(formData: FormData): Record<string, string> {
   return {
-    type: String(formData.get("type") ?? ""),
+    activityTypeId: String(formData.get("activityTypeId") ?? ""),
     performanceDate: String(formData.get("performanceDate") ?? ""),
     team: String(formData.get("team") ?? ""),
     notes: String(formData.get("notes") ?? ""),

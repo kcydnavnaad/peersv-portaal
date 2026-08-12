@@ -4,10 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import {
   formatAmount,
-  performanceTypes,
-  performanceTypeLabel,
   type PerformanceFormState,
-  type PerformanceType,
 } from "@/lib/performances";
 
 type TeamOption = {
@@ -16,15 +13,22 @@ type TeamOption = {
   seasonName: string | null;
 };
 
+type ActivityTypeOption = {
+  id: number;
+  name: string;
+  isDefault: boolean;
+};
+
 type Props = {
   action: (
     state: PerformanceFormState,
     fd: FormData,
   ) => Promise<PerformanceFormState>;
   teamOptions: TeamOption[];
+  activityTypes: ActivityTypeOption[];
   rate: string | null;
   defaults?: {
-    type?: PerformanceType;
+    activityTypeId?: number;
     performanceDate?: string;
     team?: number;
     notes?: string | null;
@@ -41,6 +45,7 @@ const errorCls = "mt-1 text-xs text-red-600";
 export function PerformanceForm({
   action,
   teamOptions,
+  activityTypes,
   rate,
   defaults,
   submitLabel,
@@ -73,23 +78,34 @@ export function PerformanceForm({
       )}
 
       <div>
-        <label htmlFor="type" className={labelCls}>
+        <label htmlFor="activityTypeId" className={labelCls}>
           Type *
         </label>
         <select
-          id="type"
-          name="type"
+          id="activityTypeId"
+          name="activityTypeId"
           required
-          defaultValue={v("type", defaults?.type ?? "training")}
+          defaultValue={v(
+            "activityTypeId",
+            defaults?.activityTypeId != null
+              ? String(defaults.activityTypeId)
+              : String(
+                  activityTypes.find((a) => a.isDefault)?.id ??
+                    activityTypes[0]?.id ??
+                    "",
+                ),
+          )}
           className={inputCls}
         >
-          {performanceTypes.map((t) => (
-            <option key={t} value={t}>
-              {performanceTypeLabel[t]}
+          {activityTypes.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
             </option>
           ))}
         </select>
-        {state.errors?.type && <p className={errorCls}>{state.errors.type}</p>}
+        {state.errors?.activityTypeId && (
+          <p className={errorCls}>{state.errors.activityTypeId}</p>
+        )}
       </div>
 
       <div>

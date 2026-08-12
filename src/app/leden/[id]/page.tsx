@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  activityTypes,
   attendances,
   members,
   performances,
@@ -73,13 +74,14 @@ export default async function MemberDetailPage({
       attendanceId: attendances.id,
       performanceId: performances.id,
       performanceDate: performances.performanceDate,
-      performanceType: performances.type,
+      activityTypeName: activityTypes.name,
       teamName: teams.name,
       present: attendances.present,
     })
     .from(attendances)
     .innerJoin(performances, eq(attendances.performanceId, performances.id))
     .leftJoin(teams, eq(performances.teamId, teams.id))
+    .leftJoin(activityTypes, eq(activityTypes.id, performances.activityTypeId))
     .where(eq(attendances.memberId, member.id))
     .orderBy(desc(performances.performanceDate))
     .limit(20);
@@ -88,12 +90,6 @@ export default async function MemberDetailPage({
   const absentCount = attendanceHistory.filter((a) => !a.present).length;
   const total = attendanceHistory.length;
   const presentRate = total > 0 ? Math.round((presentCount / total) * 100) : 0;
-
-  const performanceTypeLabel: Record<string, string> = {
-    training: "Training",
-    match: "Wedstrijd",
-    tournament: "Tornooi",
-  };
 
   const fullName = `${member.firstName} ${member.lastName}`;
 
@@ -173,7 +169,7 @@ export default async function MemberDetailPage({
                       {formatDate(a.performanceDate)}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
-                      {performanceTypeLabel[a.performanceType] ?? a.performanceType}
+                      {a.activityTypeName ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       {a.teamName ?? "-"}

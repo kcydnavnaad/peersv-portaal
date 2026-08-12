@@ -39,7 +39,6 @@ export default async function AttendancesPage({
       teamId: performances.teamId,
       teamName: teams.name,
       performanceDate: performances.performanceDate,
-      type: performances.type,
     })
     .from(performances)
     .leftJoin(teams, eq(performances.teamId, teams.id))

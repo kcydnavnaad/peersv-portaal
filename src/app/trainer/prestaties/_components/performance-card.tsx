@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { formatAmount, performanceStatusLabel, performanceTypeLabel } from "@/lib/performances";
+import { formatAmount, performanceStatusLabel } from "@/lib/performances";
 
 type Props = {
   id: number;
   performanceDate: string;
-  type: string;
+  activityTypeName: string | null;
   amount: string;
   status: "open" | "paid";
   teamName: string | null;
@@ -23,7 +23,7 @@ function formatDate(value: string) {
 export function PerformanceCard({
   id,
   performanceDate,
-  type,
+  activityTypeName,
   amount,
   status,
   teamName,
@@ -51,7 +51,7 @@ export function PerformanceCard({
             {formatDate(performanceDate)}
           </div>
           <div className="mt-1 text-sm text-slate-600">
-            {performanceTypeLabel[type as keyof typeof performanceTypeLabel] ?? type}
+            {activityTypeName ?? "-"}
           </div>
           <div className="mt-1 text-sm text-slate-600">{teamName ?? "-"}</div>
         </div>

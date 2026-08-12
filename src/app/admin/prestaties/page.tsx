@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
-import { performances, teams, users } from "@/db/schema";
+import { activityTypes, performances, teams, users } from "@/db/schema";
 import {
   parsePeriod,
   parseStatusFilter,
@@ -11,7 +11,6 @@ import {
 import {
   formatAmount,
   performanceStatusLabel,
-  performanceTypeLabel,
 } from "@/lib/performances";
 import { actsAsTrainer } from "@/lib/users";
 import { FiltersBar } from "./_components/filters-bar";
@@ -59,7 +58,7 @@ export default async function AdminPerformancesListPage({
       .select({
         id: performances.id,
         date: performances.performanceDate,
-        type: performances.type,
+        activityTypeName: activityTypes.name,
         amount: performances.amount,
         status: performances.status,
         trainerName: sql<string>`${trainerUser.firstName} || ' ' || ${trainerUser.lastName}`,
@@ -68,6 +67,7 @@ export default async function AdminPerformancesListPage({
       .from(performances)
       .innerJoin(trainerUser, eq(trainerUser.id, performances.userId))
       .leftJoin(teams, eq(teams.id, performances.teamId))
+      .leftJoin(activityTypes, eq(activityTypes.id, performances.activityTypeId))
       .where(where)
       .orderBy(desc(performances.performanceDate), desc(performances.id)),
     db
@@ -133,7 +133,7 @@ export default async function AdminPerformancesListPage({
                       {formatDate(p.date)}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
-                      {performanceTypeLabel[p.type]}
+                      {p.activityTypeName ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       {p.teamName ?? "-"}
@@ -160,7 +160,7 @@ export default async function AdminPerformancesListPage({
                 key={p.id}
                 id={p.id}
                 date={p.date}
-                type={p.type}
+                activityTypeName={p.activityTypeName}
                 amount={p.amount}
                 status={p.status}
                 trainerName={p.trainerName}

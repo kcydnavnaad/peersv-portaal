@@ -3,11 +3,10 @@ import { notFound } from "next/navigation";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { attendances, members, performances, seasons, teamMembers, teams } from "@/db/schema";
+import { activityTypes, attendances, members, performances, seasons, teamMembers, teams } from "@/db/schema";
 import {
   formatAmount,
   performanceStatusLabel,
-  performanceTypeLabel,
 } from "@/lib/performances";
 import { DeletePerformanceButton } from "../_components/delete-performance-button";
 
@@ -37,7 +36,7 @@ export default async function PerformanceDetailPage({
     .select({
       id: performances.id,
       userId: performances.userId,
-      type: performances.type,
+      activityTypeName: activityTypes.name,
       performanceDate: performances.performanceDate,
       amount: performances.amount,
       notes: performances.notes,
@@ -51,6 +50,7 @@ export default async function PerformanceDetailPage({
     .from(performances)
     .leftJoin(teams, eq(performances.teamId, teams.id))
     .leftJoin(seasons, eq(teams.seasonId, seasons.id))
+    .leftJoin(activityTypes, eq(activityTypes.id, performances.activityTypeId))
     .where(eq(performances.id, perfId))
     .limit(1);
 
@@ -109,7 +109,7 @@ export default async function PerformanceDetailPage({
             ← Terug naar prestaties
           </Link>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            {performanceTypeLabel[perf.type]} ·{" "}
+            {perf.activityTypeName ?? "-"} ·{" "}
             {formatDate(perf.performanceDate)}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -133,7 +133,7 @@ export default async function PerformanceDetailPage({
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <dl className="divide-y divide-slate-100 text-sm">
           <Row label="Datum" value={formatDate(perf.performanceDate)} />
-          <Row label="Type" value={performanceTypeLabel[perf.type]} />
+          <Row label="Type" value={perf.activityTypeName ?? "-"} />
           <Row label="Ploeg" value={perf.teamName ?? "-"} />
           <Row label="Bedrag" value={formatAmount(perf.amount)} />
           <Row

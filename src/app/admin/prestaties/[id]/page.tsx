@@ -3,11 +3,10 @@ import { notFound } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
-import { performances, seasons, teams, users } from "@/db/schema";
+import { activityTypes, performances, seasons, teams, users } from "@/db/schema";
 import {
   formatAmount,
   performanceStatusLabel,
-  performanceTypeLabel,
 } from "@/lib/performances";
 import { PaymentToggleButton } from "../_components/payment-toggle-button";
 
@@ -36,7 +35,7 @@ export default async function AdminPerformanceDetailPage({
   const [perf] = await db
     .select({
       id: performances.id,
-      type: performances.type,
+      activityTypeName: activityTypes.name,
       performanceDate: performances.performanceDate,
       amount: performances.amount,
       notes: performances.notes,
@@ -57,6 +56,7 @@ export default async function AdminPerformanceDetailPage({
     .leftJoin(teams, eq(teams.id, performances.teamId))
     .leftJoin(seasons, eq(seasons.id, teams.seasonId))
     .leftJoin(paidByUser, eq(paidByUser.id, performances.paidBy))
+    .leftJoin(activityTypes, eq(activityTypes.id, performances.activityTypeId))
     .where(eq(performances.id, perfId))
     .limit(1);
 
@@ -73,7 +73,7 @@ export default async function AdminPerformanceDetailPage({
             ← Terug naar prestaties
           </Link>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            {performanceTypeLabel[perf.type]} ·{" "}
+            {perf.activityTypeName ?? "-"} ·{" "}
             {formatDate(perf.performanceDate)}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -95,7 +95,7 @@ export default async function AdminPerformanceDetailPage({
             value={`${perf.trainerName} (${perf.trainerEmail})`}
           />
           <Row label="Datum" value={formatDate(perf.performanceDate)} />
-          <Row label="Type" value={performanceTypeLabel[perf.type]} />
+          <Row label="Type" value={perf.activityTypeName ?? "-"} />
           <Row label="Ploeg" value={perf.teamName ?? "-"} />
           <Row label="Seizoen" value={perf.seasonName ?? "-"} />
           <Row label="Bedrag" value={formatAmount(perf.amount)} />

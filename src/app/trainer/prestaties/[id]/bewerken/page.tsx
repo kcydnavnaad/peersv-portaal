@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { updatePerformance } from "@/app/actions/performances";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { performances, users } from "@/db/schema";
+import { activityTypes, performances, users } from "@/db/schema";
 import { getTeamOptionsForTrainer } from "@/lib/trainer-teams";
 import { PerformanceForm } from "../../_components/performance-form";
 
@@ -41,6 +41,14 @@ export default async function EditPerformancePage({
   if (!me) redirect("/dashboard");
 
   const teamOptions = await getTeamOptionsForTrainer(userId, me.isButterfly);
+  const activityOptions = await db
+    .select({
+      id: activityTypes.id,
+      name: activityTypes.name,
+      isDefault: activityTypes.isDefault,
+    })
+    .from(activityTypes)
+    .orderBy(asc(activityTypes.id));
   const boundAction = updatePerformance.bind(null, perf.id);
 
   return (
@@ -61,9 +69,10 @@ export default async function EditPerformancePage({
         <PerformanceForm
           action={boundAction}
           teamOptions={teamOptions}
+          activityTypes={activityOptions}
           rate={me.trainerRate}
           defaults={{
-            type: perf.type,
+            activityTypeId: perf.activityTypeId,
             performanceDate: perf.performanceDate,
             team: perf.teamId,
             notes: perf.notes,

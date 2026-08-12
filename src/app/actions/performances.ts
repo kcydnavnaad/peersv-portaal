@@ -12,6 +12,7 @@ import {
   valuesFromFormData,
   type PerformanceFormState,
 } from "@/lib/performances";
+import { resolveTrainerRate } from "@/lib/trainer-rates";
 
 async function requireTrainer() {
   const session = await auth();
@@ -90,10 +91,12 @@ export async function createPerformance(
     };
   }
 
-  if (!me.trainerRate) {
+  const rate = await resolveTrainerRate(userId, parsed.data.activityTypeId);
+  if (!rate) {
     return {
       errors: {
-        type: "Geen tarief ingesteld op je profiel. Vraag een admin om dit in te stellen.",
+        activityTypeId:
+          "Geen tarief ingesteld voor deze activiteit. Vraag een admin om dit in te stellen.",
       },
       values: valuesFromFormData(formData),
     };
@@ -113,9 +116,9 @@ export async function createPerformance(
     .values({
       userId,
       teamId: parsed.data.team,
-      type: parsed.data.type,
+      activityTypeId: parsed.data.activityTypeId,
       performanceDate: parsed.data.performanceDate,
-      amount: me.trainerRate,
+      amount: rate,
       notes: parsed.data.notes,
     })
     .returning({ id: performances.id });
@@ -155,6 +158,17 @@ export async function updatePerformance(
     };
   }
 
+  const rate = await resolveTrainerRate(userId, parsed.data.activityTypeId);
+  if (!rate) {
+    return {
+      errors: {
+        activityTypeId:
+          "Geen tarief ingesteld voor deze activiteit. Vraag een admin om dit in te stellen.",
+      },
+      values: valuesFromFormData(formData),
+    };
+  }
+
   const teamCheck = await ensureTeamAllowed(
     userId,
     parsed.data.team,
@@ -167,10 +181,11 @@ export async function updatePerformance(
   await db
     .update(performances)
     .set({
-      type: parsed.data.type,
+      activityTypeId: parsed.data.activityTypeId,
       performanceDate: parsed.data.performanceDate,
       teamId: parsed.data.team,
       notes: parsed.data.notes,
+      amount: rate,
       updatedAt: new Date(),
     })
     .where(eq(performances.id, id));
