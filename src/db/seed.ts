@@ -159,7 +159,7 @@ async function main() {
         {
           userId: tom.id,
           teamId: senioren.id,
-          type: "training",
+          activityTypeId: 1,
           performanceDate: daysAgo(14),
           amount: rate,
           status: "open",
@@ -168,7 +168,7 @@ async function main() {
         {
           userId: tom.id,
           teamId: senioren.id,
-          type: "training",
+          activityTypeId: 1,
           performanceDate: daysAgo(7),
           amount: rate,
           status: "open",
@@ -176,7 +176,7 @@ async function main() {
         {
           userId: tom.id,
           teamId: senioren.id,
-          type: "match",
+          activityTypeId: 2,
           performanceDate: daysAgo(2),
           amount: rate,
           status: "open",

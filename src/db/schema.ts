@@ -4,6 +4,7 @@ import {
   date,
   decimal,
   integer,
+  numeric,
   pgEnum,
   pgTable,
   serial,
@@ -20,12 +21,6 @@ export const memberStatusEnum = pgEnum("member_status", [
 ]);
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "trainer"]);
-
-export const performanceTypeEnum = pgEnum("performance_type", [
-  "training",
-  "match",
-  "tournament",
-]);
 
 export const performanceStatusEnum = pgEnum("performance_status", [
   "open",
@@ -117,6 +112,36 @@ export const seasons = pgTable("seasons", {
     .defaultNow()
     .notNull(),
 });
+
+export const activityTypes = pgTable("activity_types", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const trainerRateOverrides = pgTable(
+  "trainer_rate_overrides",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    activityTypeId: integer("activity_type_id")
+      .notNull()
+      .references(() => activityTypes.id, { onDelete: "cascade" }),
+    rate: numeric("rate", { precision: 10, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [unique().on(t.userId, t.activityTypeId)],
+);
 
 export const teams = pgTable(
   "teams",
@@ -232,7 +257,9 @@ export const performances = pgTable("performances", {
   teamId: integer("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "restrict" }),
-  type: performanceTypeEnum("type").notNull(),
+  activityTypeId: integer("activity_type_id")
+    .notNull()
+    .references(() => activityTypes.id),
   performanceDate: date("performance_date").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
