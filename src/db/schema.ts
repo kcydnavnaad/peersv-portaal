@@ -117,10 +117,29 @@ export const activityTypes = pgTable("activity_types", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
   isDefault: boolean("is_default").notNull().default(false),
+  isDefaultVisible: boolean("is_default_visible").notNull().default(true),
+  requiresTeam: boolean("requires_team").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
+
+export const trainerActivityAccess = pgTable(
+  "trainer_activity_access",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    activityTypeId: integer("activity_type_id")
+      .notNull()
+      .references(() => activityTypes.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [unique().on(t.userId, t.activityTypeId)],
+);
 
 export const trainerRateOverrides = pgTable(
   "trainer_rate_overrides",
@@ -254,9 +273,9 @@ export const performances = pgTable("performances", {
   userId: integer("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  teamId: integer("team_id")
-    .notNull()
-    .references(() => teams.id, { onDelete: "restrict" }),
+  teamId: integer("team_id").references(() => teams.id, {
+    onDelete: "restrict",
+  }),
   activityTypeId: integer("activity_type_id")
     .notNull()
     .references(() => activityTypes.id),

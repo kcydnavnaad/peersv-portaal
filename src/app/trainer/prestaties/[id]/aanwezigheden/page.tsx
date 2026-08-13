@@ -55,6 +55,12 @@ export default async function AttendancesPage({
     redirect("/trainer/prestaties");
   }
 
+  // Prestaties zonder ploeg (bv. Peersv woensdagt) hebben geen aanwezigheden.
+  if (perf.teamId == null) {
+    redirect(`/trainer/prestaties/${performanceId}`);
+  }
+  const perfTeamId = perf.teamId;
+
   // Active team members for this team
   const memberRows = await db
     .select({
@@ -66,7 +72,7 @@ export default async function AttendancesPage({
     .innerJoin(members, eq(teamMembers.memberId, members.id))
     .where(
       and(
-        eq(teamMembers.teamId, perf.teamId),
+        eq(teamMembers.teamId, perfTeamId),
         isNull(teamMembers.leftAt),
       ),
     )

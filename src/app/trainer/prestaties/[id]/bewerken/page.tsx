@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { updatePerformance } from "@/app/actions/performances";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { activityTypes, performances, users } from "@/db/schema";
+import { performances, users } from "@/db/schema";
+import { getActivityTypesForTrainer } from "@/lib/activity-types";
 import { getTeamOptionsForTrainer } from "@/lib/trainer-teams";
 import { PerformanceForm } from "../../_components/performance-form";
 
@@ -41,14 +42,7 @@ export default async function EditPerformancePage({
   if (!me) redirect("/dashboard");
 
   const teamOptions = await getTeamOptionsForTrainer(userId, me.isButterfly);
-  const activityOptions = await db
-    .select({
-      id: activityTypes.id,
-      name: activityTypes.name,
-      isDefault: activityTypes.isDefault,
-    })
-    .from(activityTypes)
-    .orderBy(asc(activityTypes.id));
+  const activityOptions = await getActivityTypesForTrainer(userId);
   const boundAction = updatePerformance.bind(null, perf.id);
 
   return (
@@ -74,7 +68,7 @@ export default async function EditPerformancePage({
           defaults={{
             activityTypeId: perf.activityTypeId,
             performanceDate: perf.performanceDate,
-            team: perf.teamId,
+            team: perf.teamId ?? undefined,
             notes: perf.notes,
           }}
           submitLabel="Opslaan"

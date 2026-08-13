@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createPerformance } from "@/app/actions/performances";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { activityTypes, users } from "@/db/schema";
+import { users } from "@/db/schema";
+import { getActivityTypesForTrainer } from "@/lib/activity-types";
 import { getTeamOptionsForTrainer } from "@/lib/trainer-teams";
 import { PerformanceForm } from "../_components/performance-form";
 
@@ -24,14 +25,7 @@ export default async function NewPerformancePage() {
   if (!me) redirect("/dashboard");
 
   const teamOptions = await getTeamOptionsForTrainer(userId, me.isButterfly);
-  const activityOptions = await db
-    .select({
-      id: activityTypes.id,
-      name: activityTypes.name,
-      isDefault: activityTypes.isDefault,
-    })
-    .from(activityTypes)
-    .orderBy(asc(activityTypes.id));
+  const activityOptions = await getActivityTypesForTrainer(userId);
   const todayIso = new Date().toISOString().slice(0, 10);
 
   return (

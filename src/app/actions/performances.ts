@@ -5,7 +5,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { performances, teamTrainers, teams, users } from "@/db/schema";
+import {
+  activityTypes,
+  performances,
+  teamTrainers,
+  teams,
+  users,
+} from "@/db/schema";
 import {
   flattenZodErrors,
   parsePerformanceForm,
@@ -91,6 +97,18 @@ export async function createPerformance(
     };
   }
 
+  const [activity] = await db
+    .select({ requiresTeam: activityTypes.requiresTeam })
+    .from(activityTypes)
+    .where(eq(activityTypes.id, parsed.data.activityTypeId))
+    .limit(1);
+  if (!activity) {
+    return {
+      errors: { activityTypeId: "Ongeldig type." },
+      values: valuesFromFormData(formData),
+    };
+  }
+
   const rate = await resolveTrainerRate(userId, parsed.data.activityTypeId);
   if (!rate) {
     return {
@@ -102,20 +120,30 @@ export async function createPerformance(
     };
   }
 
-  const teamCheck = await ensureTeamAllowed(
-    userId,
-    parsed.data.team,
-    me.isButterfly,
-  );
-  if (teamCheck) {
-    return { ...teamCheck, values: valuesFromFormData(formData) };
+  let teamId: number | null = null;
+  if (activity.requiresTeam) {
+    if (parsed.data.team == null) {
+      return {
+        errors: { team: "Ploeg is verplicht" },
+        values: valuesFromFormData(formData),
+      };
+    }
+    const teamCheck = await ensureTeamAllowed(
+      userId,
+      parsed.data.team,
+      me.isButterfly,
+    );
+    if (teamCheck) {
+      return { ...teamCheck, values: valuesFromFormData(formData) };
+    }
+    teamId = parsed.data.team;
   }
 
   const [created] = await db
     .insert(performances)
     .values({
       userId,
-      teamId: parsed.data.team,
+      teamId,
       activityTypeId: parsed.data.activityTypeId,
       performanceDate: parsed.data.performanceDate,
       amount: rate,
@@ -158,6 +186,18 @@ export async function updatePerformance(
     };
   }
 
+  const [activity] = await db
+    .select({ requiresTeam: activityTypes.requiresTeam })
+    .from(activityTypes)
+    .where(eq(activityTypes.id, parsed.data.activityTypeId))
+    .limit(1);
+  if (!activity) {
+    return {
+      errors: { activityTypeId: "Ongeldig type." },
+      values: valuesFromFormData(formData),
+    };
+  }
+
   const rate = await resolveTrainerRate(userId, parsed.data.activityTypeId);
   if (!rate) {
     return {
@@ -169,13 +209,23 @@ export async function updatePerformance(
     };
   }
 
-  const teamCheck = await ensureTeamAllowed(
-    userId,
-    parsed.data.team,
-    me.isButterfly,
-  );
-  if (teamCheck) {
-    return { ...teamCheck, values: valuesFromFormData(formData) };
+  let teamId: number | null = null;
+  if (activity.requiresTeam) {
+    if (parsed.data.team == null) {
+      return {
+        errors: { team: "Ploeg is verplicht" },
+        values: valuesFromFormData(formData),
+      };
+    }
+    const teamCheck = await ensureTeamAllowed(
+      userId,
+      parsed.data.team,
+      me.isButterfly,
+    );
+    if (teamCheck) {
+      return { ...teamCheck, values: valuesFromFormData(formData) };
+    }
+    teamId = parsed.data.team;
   }
 
   await db
@@ -183,7 +233,7 @@ export async function updatePerformance(
     .set({
       activityTypeId: parsed.data.activityTypeId,
       performanceDate: parsed.data.performanceDate,
-      teamId: parsed.data.team,
+      teamId,
       notes: parsed.data.notes,
       amount: rate,
       updatedAt: new Date(),

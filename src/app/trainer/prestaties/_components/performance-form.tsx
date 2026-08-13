@@ -1,22 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   formatAmount,
   type PerformanceFormState,
 } from "@/lib/performances";
+import type { ActivityTypeOption } from "@/lib/activity-types";
 
 type TeamOption = {
   id: number;
   name: string;
   seasonName: string | null;
-};
-
-type ActivityTypeOption = {
-  id: number;
-  name: string;
-  isDefault: boolean;
 };
 
 type Props = {
@@ -59,6 +54,25 @@ export function PerformanceForm({
   const v = (key: string, fallback?: string) =>
     state.values?.[key] ?? fallback ?? "";
 
+  const initialActivityId = (() => {
+    const raw = state.values?.activityTypeId;
+    if (raw) return Number(raw);
+    if (defaults?.activityTypeId != null) return defaults.activityTypeId;
+    return (
+      activityTypes.find((a) => a.isDefault)?.id ??
+      activityTypes[0]?.id ??
+      0
+    );
+  })();
+
+  const [selectedActivityId, setSelectedActivityId] =
+    useState<number>(initialActivityId);
+
+  const selectedActivity = activityTypes.find(
+    (a) => a.id === selectedActivityId,
+  );
+  const requiresTeam = selectedActivity?.requiresTeam ?? true;
+
   const defaultTeam =
     state.values?.team ??
     (defaults?.team ? String(defaults.team) : String(teamOptions[0]?.id ?? ""));
@@ -85,16 +99,8 @@ export function PerformanceForm({
           id="activityTypeId"
           name="activityTypeId"
           required
-          defaultValue={v(
-            "activityTypeId",
-            defaults?.activityTypeId != null
-              ? String(defaults.activityTypeId)
-              : String(
-                  activityTypes.find((a) => a.isDefault)?.id ??
-                    activityTypes[0]?.id ??
-                    "",
-                ),
-          )}
+          value={selectedActivityId ? String(selectedActivityId) : ""}
+          onChange={(e) => setSelectedActivityId(Number(e.target.value))}
           className={inputCls}
         >
           {activityTypes.map((a) => (
@@ -125,29 +131,33 @@ export function PerformanceForm({
         )}
       </div>
 
-      <div>
-        <label htmlFor="team" className={labelCls}>
-          Ploeg *
-        </label>
-        <select
-          id="team"
-          name="team"
-          required
-          defaultValue={defaultTeam}
-          className={inputCls}
-        >
-          {teamOptions.length === 0 && (
-            <option value="">Geen ploegen beschikbaar</option>
+      {requiresTeam && (
+        <div>
+          <label htmlFor="team" className={labelCls}>
+            Ploeg *
+          </label>
+          <select
+            id="team"
+            name="team"
+            required
+            defaultValue={defaultTeam}
+            className={inputCls}
+          >
+            {teamOptions.length === 0 && (
+              <option value="">Geen ploegen beschikbaar</option>
+            )}
+            {teamOptions.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+                {t.seasonName ? ` (${t.seasonName})` : ""}
+              </option>
+            ))}
+          </select>
+          {state.errors?.team && (
+            <p className={errorCls}>{state.errors.team}</p>
           )}
-          {teamOptions.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-              {t.seasonName ? ` (${t.seasonName})` : ""}
-            </option>
-          ))}
-        </select>
-        {state.errors?.team && <p className={errorCls}>{state.errors.team}</p>}
-      </div>
+        </div>
+      )}
 
       <div>
         <label htmlFor="notes" className={labelCls}>
@@ -174,7 +184,9 @@ export function PerformanceForm({
         </Link>
         <button
           type="submit"
-          disabled={isPending || teamOptions.length === 0 || !rate}
+          disabled={
+            isPending || (requiresTeam && teamOptions.length === 0) || !rate
+          }
           className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
         >
           {isPending ? "Bezig..." : submitLabel}

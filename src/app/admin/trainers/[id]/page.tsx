@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import {
+  activityTypes,
+  trainerActivityAccess,
+  trainerRateOverrides,
+  users,
+} from "@/db/schema";
 import { formatIban, formatRate } from "@/lib/trainers";
 import { actsAsTrainer } from "@/lib/users";
+import { ActivityAccessRow } from "../_components/activity-access-row";
 import { AdminResetMfaButton } from "../_components/AdminResetMfaButton";
 import { ResetPasswordButton } from "../_components/ResetPasswordButton";
 import { ToggleActivationButton } from "../_components/ToggleActivationButton";
@@ -35,6 +41,33 @@ export default async function TrainerDetailPage({
 
   const fullName = `${trainer.firstName} ${trainer.lastName}`;
   const isDeactivated = trainer.deactivatedAt !== null;
+
+  const activityRows = await db
+    .select({
+      id: activityTypes.id,
+      name: activityTypes.name,
+      isDefaultVisible: activityTypes.isDefaultVisible,
+      hasAccessId: trainerActivityAccess.id,
+      overrideRate: trainerRateOverrides.rate,
+    })
+    .from(activityTypes)
+    .leftJoin(
+      trainerActivityAccess,
+      and(
+        eq(trainerActivityAccess.activityTypeId, activityTypes.id),
+        eq(trainerActivityAccess.userId, trainer.id),
+      ),
+    )
+    .leftJoin(
+      trainerRateOverrides,
+      and(
+        eq(trainerRateOverrides.activityTypeId, activityTypes.id),
+        eq(trainerRateOverrides.userId, trainer.id),
+      ),
+    )
+    .orderBy(asc(activityTypes.id));
+
+  const nonDefaultActivities = activityRows.filter((a) => !a.isDefaultVisible);
 
   return (
     <div className="space-y-6">
@@ -130,6 +163,28 @@ export default async function TrainerDetailPage({
           />
         </dl>
       </div>
+
+      {nonDefaultActivities.length > 0 && (
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold">Activity access &amp; tarief</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Vink activiteiten aan die deze trainer mag loggen. Leeg tarief =
+            standaard tarief van de trainer wordt gebruikt.
+          </p>
+          <div className="mt-4">
+            {nonDefaultActivities.map((a) => (
+              <ActivityAccessRow
+                key={a.id}
+                trainerId={trainer.id}
+                activityTypeId={a.id}
+                activityName={a.name}
+                initialHasAccess={a.hasAccessId !== null}
+                initialRate={a.overrideRate}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

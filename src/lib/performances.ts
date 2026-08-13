@@ -29,7 +29,13 @@ export const performanceSchema = z.object({
       (v) => new Date(v) <= today(),
       "Datum kan niet in de toekomst liggen",
     ),
-  team: z.coerce.number().int().positive("Ploeg is verplicht"),
+  team: z
+    .union([z.string(), z.undefined(), z.null()])
+    .transform((v) => {
+      if (v == null || v === "") return null;
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    }),
   notes: optionalString.pipe(
     z.string().max(1000, "Maximaal 1000 tekens").nullable(),
   ),

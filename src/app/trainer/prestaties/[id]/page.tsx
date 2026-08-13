@@ -65,7 +65,8 @@ export default async function PerformanceDetailPage({
     .limit(1);
 
   // Actieve leden in dit team + hun aanwezigheid voor deze prestatie
-  const attendanceRows = perfTeam
+  const perfTeamId = perfTeam?.teamId ?? null;
+  const attendanceRows = perfTeamId
     ? await db
         .select({
           memberId: members.id,
@@ -84,7 +85,7 @@ export default async function PerformanceDetailPage({
         )
         .where(
           and(
-            eq(teamMembers.teamId, perfTeam.teamId),
+            eq(teamMembers.teamId, perfTeamId),
             isNull(teamMembers.leftAt),
           ),
         )
