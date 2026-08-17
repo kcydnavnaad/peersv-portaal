@@ -10,25 +10,23 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
-      <div className="relative hidden md:block">
-        <Image
-          src="/peersv-team.jpg"
-          alt="K. Peer SV jeugdploegen"
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-slate-900/60 to-slate-900/20" />
-        <div className="absolute bottom-12 left-12 text-white">
-          <span className="text-5xl font-bold tracking-tight lg:text-6xl">
-            K. Peer SV
-          </span>
-        </div>
-      </div>
+    <div className="relative min-h-screen overflow-hidden">
+      <Image
+        src="/peersv-team.jpg"
+        alt="K. Peer SV jeugdploegen"
+        fill
+        priority
+        className="absolute inset-0 z-0 object-cover"
+      />
 
-      <div className="flex flex-col items-center justify-center bg-[color:var(--color-surface)] p-8 md:p-16">
-        <div className="w-full max-w-sm">
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-slate-900/50 to-slate-50/95 md:bg-gradient-to-r md:from-slate-900/85 md:via-slate-900/60 md:to-slate-50/95" />
+
+      <span className="absolute bottom-8 left-6 z-20 hidden text-4xl font-bold tracking-tight text-white md:block md:bottom-12 md:left-12 md:text-5xl lg:text-6xl">
+        K. Peer SV
+      </span>
+
+      <div className="relative z-20 flex min-h-screen items-center justify-center p-8 md:justify-end md:p-16 lg:pr-24">
+        <div className="w-full max-w-sm rounded-[var(--radius-lg)] bg-[color:var(--color-surface)] p-8 shadow-[var(--shadow-md)]">
           <div className="mb-6 grid size-12 place-items-center rounded-[var(--radius-md)] bg-[color:var(--color-primary)] text-xl font-bold text-white">
             P
           </div>
