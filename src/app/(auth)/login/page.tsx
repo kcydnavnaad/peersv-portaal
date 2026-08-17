@@ -27,9 +27,6 @@ export default async function LoginPage() {
 
       <div className="relative z-20 flex min-h-screen items-center justify-center p-8 md:justify-end md:p-16 lg:pr-24">
         <div className="w-full max-w-sm rounded-[var(--radius-lg)] bg-[color:var(--color-surface)] p-8 shadow-[var(--shadow-md)]">
-          <div className="mb-6 grid size-12 place-items-center rounded-[var(--radius-md)] bg-[color:var(--color-primary)] text-xl font-bold text-white">
-            P
-          </div>
           <h1 className="mb-2 text-2xl font-semibold tracking-tight">
             Inloggen
           </h1>
