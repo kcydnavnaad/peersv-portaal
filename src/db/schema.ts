@@ -24,6 +24,7 @@ export const userRoleEnum = pgEnum("user_role", ["admin", "trainer"]);
 
 export const performanceStatusEnum = pgEnum("performance_status", [
   "open",
+  "sent",
   "paid",
 ]);
 
@@ -283,6 +284,10 @@ export const performances = pgTable("performances", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
   status: performanceStatusEnum("status").notNull().default("open"),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  sentBy: integer("sent_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
   paidAt: timestamp("paid_at", { withTimezone: true }),
   paidBy: integer("paid_by").references(() => users.id, {
     onDelete: "set null",

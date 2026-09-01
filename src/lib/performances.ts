@@ -12,8 +12,11 @@ const today = () => {
   return d;
 };
 
-export const performanceStatusLabel: Record<"open" | "paid", string> = {
+export type PerformanceStatus = "open" | "sent" | "paid";
+
+export const performanceStatusLabel: Record<PerformanceStatus, string> = {
   open: "Open",
+  sent: "Doorgestuurd",
   paid: "Betaald",
 };
 

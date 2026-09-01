@@ -1,5 +1,5 @@
 export type PerformancePeriod = "month" | "last-month" | "year" | "all";
-export type PerformanceStatusFilter = "open" | "paid" | "all";
+export type PerformanceStatusFilter = "open" | "sent" | "paid" | "all";
 
 export function periodRange(
   period: PerformancePeriod,
@@ -40,7 +40,7 @@ export function parsePeriod(value: string | undefined): PerformancePeriod {
 export function parseStatusFilter(
   value: string | undefined,
 ): PerformanceStatusFilter {
-  if (value === "open" || value === "paid") return value;
+  if (value === "open" || value === "sent" || value === "paid") return value;
   return "all";
 }
 
