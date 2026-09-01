@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -185,7 +185,7 @@ export async function previewMarkTrainerMonthAsPaid(
     .where(
       and(
         eq(performances.userId, trainerId),
-        eq(performances.status, "open"),
+        inArray(performances.status, ["open", "sent"]),
         gte(performances.performanceDate, monthStart),
         lt(performances.performanceDate, monthEnd),
       ),
@@ -226,7 +226,7 @@ export async function markTrainerMonthAsPaid(
     .where(
       and(
         eq(performances.userId, trainerId),
-        eq(performances.status, "open"),
+        inArray(performances.status, ["open", "sent"]),
         gte(performances.performanceDate, monthStart),
         lt(performances.performanceDate, monthEnd),
       ),

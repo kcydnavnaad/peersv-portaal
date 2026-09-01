@@ -15,6 +15,7 @@ const PERIODS = [
 const STATUSES = [
   { value: "all", label: "Alle statussen" },
   { value: "open", label: "Open" },
+  { value: "sent", label: "Doorgestuurd" },
   { value: "paid", label: "Betaald" },
 ];
 

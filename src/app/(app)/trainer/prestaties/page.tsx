@@ -124,11 +124,13 @@ export default async function PerformancesListPage() {
   );
 }
 
-function StatusBadge({ status }: { status: "open" | "paid" }) {
+function StatusBadge({ status }: { status: "open" | "sent" | "paid" }) {
   const cls =
     status === "paid"
       ? "bg-emerald-50 text-emerald-800"
-      : "bg-slate-100 text-slate-700";
+      : status === "sent"
+        ? "bg-amber-50 text-amber-800"
+        : "bg-slate-100 text-slate-700";
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>
       {performanceStatusLabel[status]}

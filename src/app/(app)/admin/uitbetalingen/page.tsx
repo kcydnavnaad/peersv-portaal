@@ -9,6 +9,7 @@ import {
   type CapStatus,
 } from "@/lib/payment-cap";
 import { actsAsTrainer } from "@/lib/users";
+import { BulkSendButton } from "./_components/bulk-send-button";
 import { ExportCsvButton } from "./_components/export-csv-button";
 import { MarkMonthPaidButton } from "./_components/mark-month-paid-button";
 import { MonthFilter } from "./_components/month-filter";
@@ -126,7 +127,9 @@ export default async function PayoutsPage({
       firstName: users.firstName,
       lastName: users.lastName,
       openMonth: sql<string>`coalesce(sum(case when ${performances.status} = 'open' and ${performances.performanceDate} >= ${monthStart} and ${performances.performanceDate} < ${monthEnd} then ${performances.amount} end), 0)`,
+      sentMonth: sql<string>`coalesce(sum(case when ${performances.status} = 'sent' and ${performances.performanceDate} >= ${monthStart} and ${performances.performanceDate} < ${monthEnd} then ${performances.amount} end), 0)`,
       paidMonth: sql<string>`coalesce(sum(case when ${performances.status} = 'paid' and ${performances.performanceDate} >= ${monthStart} and ${performances.performanceDate} < ${monthEnd} then ${performances.amount} end), 0)`,
+      openCount: sql<number>`(count(case when ${performances.status} = 'open' and ${performances.performanceDate} >= ${monthStart} and ${performances.performanceDate} < ${monthEnd} then ${performances.id} end))::int`,
       yearTotal: sql<string>`coalesce(sum(case when ${performances.performanceDate} >= ${yearStart} and ${performances.performanceDate} < ${yearEnd} then ${performances.amount} end), 0)`,
     })
     .from(users)
@@ -138,11 +141,13 @@ export default async function PayoutsPage({
     );
 
   const totalOpenMonth = rows.reduce((s, r) => s + Number(r.openMonth), 0);
+  const totalSentMonth = rows.reduce((s, r) => s + Number(r.sentMonth), 0);
+  const totalOpenCount = rows.reduce((s, r) => s + Number(r.openCount), 0);
   const monthOptions = buildMonthOptions(year);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             Uitbetalingen
@@ -152,7 +157,15 @@ export default async function PayoutsPage({
             {formatAmount(cap.toFixed(2))} per trainer.
           </p>
         </div>
-        <ExportCsvButton year={year} month={month} />
+        <div className="flex flex-col items-end gap-2">
+          <ExportCsvButton year={year} month={month} />
+          <BulkSendButton
+            periodYearMonth={monthValue}
+            monthLabel={monthLabel}
+            openCount={totalOpenCount}
+            openTotalLabel={formatAmount(totalOpenMonth.toFixed(2))}
+          />
+        </div>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:max-w-xs">
@@ -167,6 +180,7 @@ export default async function PayoutsPage({
               <tr>
                 <th className="px-4 py-3">Trainer</th>
                 <th className="px-4 py-3 text-right">Open ({monthLabel})</th>
+                <th className="px-4 py-3 text-right">Doorgestuurd</th>
                 <th className="px-4 py-3 text-right">
                   Betaald ({monthLabel})
                 </th>
@@ -187,6 +201,9 @@ export default async function PayoutsPage({
                     <td className="px-4 py-3 text-right tabular-nums">
                       {formatAmount(r.openMonth)}
                     </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-amber-800">
+                      {formatAmount(r.sentMonth)}
+                    </td>
                     <td className="px-4 py-3 text-right tabular-nums text-slate-600">
                       {formatAmount(r.paidMonth)}
                     </td>
@@ -201,7 +218,10 @@ export default async function PayoutsPage({
                           year={year}
                           month={month}
                           monthLabel={monthLabel}
-                          hasOpen={Number(r.openMonth) > 0}
+                          hasUnpaid={
+                            Number(r.openMonth) > 0 ||
+                            Number(r.sentMonth) > 0
+                          }
                         />
                         <Link
                           href={`/admin/prestaties?trainer=${r.id}&period=month`}
@@ -217,9 +237,12 @@ export default async function PayoutsPage({
             </tbody>
             <tfoot className="border-t border-slate-200 bg-slate-50">
               <tr>
-                <td className="px-4 py-3 font-medium">Totaal openstaand</td>
+                <td className="px-4 py-3 font-medium">Totaal</td>
                 <td className="px-4 py-3 text-right tabular-nums font-medium">
                   {formatAmount(totalOpenMonth.toFixed(2))}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums font-medium text-amber-800">
+                  {formatAmount(totalSentMonth.toFixed(2))}
                 </td>
                 <td colSpan={4}></td>
               </tr>
@@ -236,6 +259,7 @@ export default async function PayoutsPage({
               firstName={r.firstName}
               lastName={r.lastName}
               openMonth={r.openMonth}
+              sentMonth={r.sentMonth}
               paidMonth={r.paidMonth}
               yearTotal={r.yearTotal}
               monthLabel={monthLabel}
@@ -244,11 +268,17 @@ export default async function PayoutsPage({
               cap={cap}
             />
           ))}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm space-y-1">
             <div className="flex items-center justify-between">
               <span className="font-medium">Totaal openstaand</span>
               <span className="tabular-nums font-medium">
                 {formatAmount(totalOpenMonth.toFixed(2))}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-amber-800">
+              <span>Totaal doorgestuurd</span>
+              <span className="tabular-nums font-medium">
+                {formatAmount(totalSentMonth.toFixed(2))}
               </span>
             </div>
           </div>

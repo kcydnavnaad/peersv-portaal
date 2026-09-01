@@ -8,6 +8,7 @@ type Props = {
   firstName: string;
   lastName: string;
   openMonth: string;
+  sentMonth: string;
   paidMonth: string;
   yearTotal: string;
   monthLabel: string;
@@ -43,6 +44,7 @@ export function PayoutCard({
   firstName,
   lastName,
   openMonth,
+  sentMonth,
   paidMonth,
   yearTotal,
   monthLabel,
@@ -65,6 +67,10 @@ export function PayoutCard({
         <dd className="text-right tabular-nums font-medium">
           {formatAmount(openMonth)}
         </dd>
+        <dt className="text-slate-500">Doorgestuurd</dt>
+        <dd className="text-right tabular-nums text-amber-800">
+          {formatAmount(sentMonth)}
+        </dd>
         <dt className="text-slate-500">Betaald ({monthLabel})</dt>
         <dd className="text-right tabular-nums text-slate-600">
           {formatAmount(paidMonth)}
@@ -80,7 +86,7 @@ export function PayoutCard({
           year={year}
           month={month}
           monthLabel={monthLabel}
-          hasOpen={Number(openMonth) > 0}
+          hasUnpaid={Number(openMonth) > 0 || Number(sentMonth) > 0}
         />
         <Link
           href={`/admin/prestaties?trainer=${id}&period=month`}

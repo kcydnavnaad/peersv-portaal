@@ -10,7 +10,7 @@ import { previewYearTotalAfterPayment } from "@/app/actions/payouts";
 
 type Props = {
   id: number;
-  status: "open" | "paid";
+  status: "open" | "sent" | "paid";
   variant?: "inline" | "detail";
 };
 

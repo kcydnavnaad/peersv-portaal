@@ -8,7 +8,7 @@ type Props = {
   performanceDate: string;
   activityTypeName: string | null;
   amount: string;
-  status: "open" | "paid";
+  status: "open" | "sent" | "paid";
   teamName: string | null;
 };
 
@@ -33,7 +33,9 @@ export function PerformanceCard({
   const statusCls =
     status === "paid"
       ? "bg-emerald-50 text-emerald-800"
-      : "bg-slate-100 text-slate-700";
+      : status === "sent"
+        ? "bg-amber-50 text-amber-800"
+        : "bg-slate-100 text-slate-700";
 
   return (
     <div

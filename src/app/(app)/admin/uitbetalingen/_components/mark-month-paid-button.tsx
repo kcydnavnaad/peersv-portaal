@@ -12,7 +12,7 @@ type Props = {
   year: number;
   month: number;
   monthLabel: string;
-  hasOpen: boolean;
+  hasUnpaid: boolean;
 };
 
 function formatEuro(n: number): string {
@@ -27,12 +27,12 @@ export function MarkMonthPaidButton({
   year,
   month,
   monthLabel,
-  hasOpen,
+  hasUnpaid,
 }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
-  if (!hasOpen) return null;
+  if (!hasUnpaid) return null;
 
   async function handleClick() {
     if (pending) return;

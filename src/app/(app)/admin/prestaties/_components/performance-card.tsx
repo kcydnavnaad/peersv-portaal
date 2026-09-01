@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { formatAmount, performanceStatusLabel } from "@/lib/performances";
 import { PaymentToggleButton } from "./payment-toggle-button";
+import { SendForPaymentButton } from "./send-for-payment-button";
 
 type Props = {
   id: number;
   date: string;
   activityTypeName: string | null;
   amount: string;
-  status: "open" | "paid";
+  status: "open" | "sent" | "paid";
   trainerName: string;
   teamName: string | null;
 };
@@ -36,7 +37,9 @@ export function PerformanceCard({
   const statusCls =
     status === "paid"
       ? "bg-emerald-50 text-emerald-800"
-      : "bg-slate-100 text-slate-700";
+      : status === "sent"
+        ? "bg-amber-50 text-amber-800"
+        : "bg-slate-100 text-slate-700";
 
   return (
     <div
@@ -66,9 +69,10 @@ export function PerformanceCard({
         </div>
       </div>
       <div
-        className="mt-3 flex justify-end"
+        className="mt-3 flex flex-wrap justify-end gap-2"
         onClick={(e) => e.stopPropagation()}
       >
+        {status === "open" && <SendForPaymentButton id={id} status={status} />}
         <PaymentToggleButton id={id} status={status} />
       </div>
     </div>

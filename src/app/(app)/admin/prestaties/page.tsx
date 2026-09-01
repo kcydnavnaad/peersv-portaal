@@ -17,6 +17,7 @@ import { FiltersBar } from "./_components/filters-bar";
 import { PaymentToggleButton } from "./_components/payment-toggle-button";
 import { PerformanceCard } from "./_components/performance-card";
 import { PerformanceRow } from "./_components/performance-row";
+import { SendForPaymentButton } from "./_components/send-for-payment-button";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,7 @@ export default async function AdminPerformancesListPage({
       .select({
         total: sql<string>`coalesce(sum(${performances.amount}), 0)`,
         open: sql<string>`coalesce(sum(case when ${performances.status} = 'open' then ${performances.amount} else 0 end), 0)`,
+        sent: sql<string>`coalesce(sum(case when ${performances.status} = 'sent' then ${performances.amount} else 0 end), 0)`,
         paid: sql<string>`coalesce(sum(case when ${performances.status} = 'paid' then ${performances.amount} else 0 end), 0)`,
       })
       .from(performances)
@@ -89,7 +91,7 @@ export default async function AdminPerformancesListPage({
       .where(where),
   ]);
 
-  const totalRow = totals[0] ?? { total: "0", open: "0", paid: "0" };
+  const totalRow = totals[0] ?? { total: "0", open: "0", sent: "0", paid: "0" };
 
   return (
     <div className="space-y-6">
@@ -98,8 +100,9 @@ export default async function AdminPerformancesListPage({
         <p className="mt-1 text-sm text-slate-600">
           {rows.length}{" "}
           {rows.length === 1 ? "prestatie" : "prestaties"} ·{" "}
-          {formatAmount(totalRow.open)} open · {formatAmount(totalRow.paid)}{" "}
-          betaald
+          {formatAmount(totalRow.open)} open ·{" "}
+          {formatAmount(totalRow.sent)} doorgestuurd ·{" "}
+          {formatAmount(totalRow.paid)} betaald
         </p>
       </div>
 
@@ -145,7 +148,12 @@ export default async function AdminPerformancesListPage({
                       <StatusBadge status={p.status} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <PaymentToggleButton id={p.id} status={p.status} />
+                      <div className="inline-flex flex-wrap justify-end gap-2">
+                        {p.status === "open" && (
+                          <SendForPaymentButton id={p.id} status={p.status} />
+                        )}
+                        <PaymentToggleButton id={p.id} status={p.status} />
+                      </div>
                     </td>
                   </PerformanceRow>
                 ))}
@@ -174,11 +182,13 @@ export default async function AdminPerformancesListPage({
   );
 }
 
-function StatusBadge({ status }: { status: "open" | "paid" }) {
+function StatusBadge({ status }: { status: "open" | "sent" | "paid" }) {
   const cls =
     status === "paid"
       ? "bg-emerald-50 text-emerald-800"
-      : "bg-slate-100 text-slate-700";
+      : status === "sent"
+        ? "bg-amber-50 text-amber-800"
+        : "bg-slate-100 text-slate-700";
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>
       {performanceStatusLabel[status]}
