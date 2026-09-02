@@ -12,7 +12,8 @@ export type AuthEventType =
   | "mfa_disabled"
   | "invite_accepted"
   | "account_deactivated"
-  | "account_reactivated";
+  | "account_reactivated"
+  | "admin_delete_performance";
 
 export type AuthEventInput = {
   email: string;

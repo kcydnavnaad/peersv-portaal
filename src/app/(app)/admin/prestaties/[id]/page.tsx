@@ -8,6 +8,7 @@ import {
   formatAmount,
   performanceStatusLabel,
 } from "@/lib/performances";
+import { AdminDeleteButton } from "../_components/admin-delete-button";
 import { PaymentToggleButton } from "../_components/payment-toggle-button";
 
 export const dynamic = "force-dynamic";
@@ -81,11 +82,20 @@ export default async function AdminPerformanceDetailPage({
             {perf.seasonName ? ` · ${perf.seasonName}` : ""}
           </p>
         </div>
-        <PaymentToggleButton
-          id={perf.id}
-          status={perf.status}
-          variant="detail"
-        />
+        <div className="flex flex-col items-end gap-2">
+          <PaymentToggleButton
+            id={perf.id}
+            status={perf.status}
+            variant="detail"
+          />
+          <AdminDeleteButton
+            performanceId={perf.id}
+            status={perf.status}
+            trainerName={perf.trainerName}
+            performanceDate={formatDate(perf.performanceDate)}
+            amount={perf.amount}
+          />
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">

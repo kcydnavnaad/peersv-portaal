@@ -12,6 +12,7 @@ import {
   teams,
   users,
 } from "@/db/schema";
+import { logAuthEvent } from "@/lib/audit";
 import {
   flattenZodErrors,
   parsePerformanceForm,
@@ -302,4 +303,54 @@ export async function deletePerformance(id: number) {
   revalidatePath("/trainer/prestaties");
   revalidatePath("/trainer");
   redirect("/trainer/prestaties");
+}
+
+/**
+ * Admin-only: delete any performance regardless of ownership or status.
+ * Emits an auth_events row with type=admin_delete_performance for audit trail.
+ * Cascades on attendances via FK ON DELETE CASCADE.
+ */
+export async function adminDeletePerformance(id: number): Promise<void> {
+  const { userId: adminId } = await requireAdmin();
+
+  const [existing] = await db
+    .select({
+      id: performances.id,
+      userId: performances.userId,
+      status: performances.status,
+      performanceDate: performances.performanceDate,
+      amount: performances.amount,
+    })
+    .from(performances)
+    .where(eq(performances.id, id))
+    .limit(1);
+  if (!existing) throw new Error("Not found");
+
+  const [adminUser] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, adminId))
+    .limit(1);
+
+  await db.delete(performances).where(eq(performances.id, id));
+
+  // Structured audit log — auth_events has no details column so metadata goes
+  // to the app log for grep/aggregation. The DB row proves who + when.
+  console.log("[audit] admin_delete_performance", {
+    adminId,
+    performanceId: existing.id,
+    trainerUserId: existing.userId,
+    status: existing.status,
+    performanceDate: existing.performanceDate,
+    amount: existing.amount,
+    at: new Date().toISOString(),
+  });
+  await logAuthEvent({
+    email: adminUser?.email ?? "unknown",
+    eventType: "admin_delete_performance",
+    userId: adminId,
+  });
+
+  revalidatePath("/admin/prestaties");
+  revalidatePath("/trainer/prestaties");
 }
