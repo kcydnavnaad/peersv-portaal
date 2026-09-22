@@ -11,7 +11,10 @@ import {
   getPaymentCapYearly,
   type CapStatus,
 } from "@/lib/payment-cap";
-import { buildPayoutsCsv } from "@/lib/payout-csv";
+import {
+  buildPayoutsXlsx,
+  PAYOUT_XLSX_CONTENT_TYPE,
+} from "@/lib/payout-xlsx";
 import { actsAsTrainer } from "@/lib/users";
 
 async function requireAdmin() {
@@ -59,13 +62,22 @@ export async function previewYearTotalAfterPayment(
   };
 }
 
-export async function exportPayoutsCsv(
+export async function exportPayoutsXlsx(
   year: number,
   month: number,
-): Promise<{ csv: string; filename: string }> {
+): Promise<{ bytes: Uint8Array; filename: string; contentType: string }> {
   await requireAdmin();
-  const result = await buildPayoutsCsv({ year, month });
-  return { csv: result.csv, filename: result.filename };
+  const result = await buildPayoutsXlsx({ year, month });
+  // Return as plain Uint8Array so the RSC boundary serializes it cleanly.
+  return {
+    bytes: new Uint8Array(
+      result.buffer.buffer,
+      result.buffer.byteOffset,
+      result.buffer.byteLength,
+    ),
+    filename: result.filename,
+    contentType: PAYOUT_XLSX_CONTENT_TYPE,
+  };
 }
 
 export async function previewMarkTrainerMonthAsPaid(

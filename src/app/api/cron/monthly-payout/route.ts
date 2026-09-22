@@ -3,7 +3,10 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { performances } from "@/db/schema";
 import { sendEmail } from "@/lib/email";
-import { buildPayoutsCsv } from "@/lib/payout-csv";
+import {
+  buildPayoutsXlsx,
+  PAYOUT_XLSX_CONTENT_TYPE,
+} from "@/lib/payout-xlsx";
 
 export const dynamic = "force-dynamic";
 
@@ -28,15 +31,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }
 
-  // 2. Bouw CSV van alle open prestaties (geen maand-filter).
+  // 2. Bouw XLSX van alle open prestaties (geen maand-filter).
   const {
-    csv,
+    buffer,
     filename,
     rowCount,
     totalAmount,
     monthLabel,
     performanceIds,
-  } = await buildPayoutsCsv();
+  } = await buildPayoutsXlsx();
 
   if (rowCount === 0 || performanceIds.length === 0) {
     console.log("[cron/monthly-payout] No open performances, skipping");
@@ -47,8 +50,8 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // 3. Mail met CSV in bijlage.
-  const csvBase64 = Buffer.from(csv, "utf-8").toString("base64");
+  // 3. Mail met XLSX in bijlage.
+  const xlsxBase64 = buffer.toString("base64");
   const formattedTotal = totalAmount.toFixed(2);
 
   const emailResult = await sendEmail({
@@ -63,15 +66,17 @@ export async function POST(request: NextRequest) {
         <li>Aantal prestaties: ${performanceIds.length}</li>
         <li>Totaal bedrag: € ${formattedTotal}</li>
       </ul>
-      <p>Zie CSV in bijlage. Alle prestaties zijn nu gemarkeerd als
+      <p>Zie Excel-bijlage. Tab &lsquo;Overzicht&rsquo; bevat de rijen per
+      trainer voor de bankverwerking; per trainer is er een detail-tab met
+      alle prestaties. Alle prestaties zijn nu gemarkeerd als
       &lsquo;Doorgestuurd ter betaling&rsquo; in het portaal.</p>
       <p>Groeten,<br>PeerSV Portaal</p>
     `,
     attachments: [
       {
         filename,
-        fileblob: csvBase64,
-        mimetype: "text/csv",
+        fileblob: xlsxBase64,
+        mimetype: PAYOUT_XLSX_CONTENT_TYPE,
       },
     ],
   });

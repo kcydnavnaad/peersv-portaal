@@ -10,7 +10,7 @@ import {
 } from "@/lib/payment-cap";
 import { actsAsTrainer } from "@/lib/users";
 import { BulkSendButton } from "./_components/bulk-send-button";
-import { ExportCsvButton } from "./_components/export-csv-button";
+import { ExportXlsxButton } from "./_components/export-xlsx-button";
 import { MarkMonthPaidButton } from "./_components/mark-month-paid-button";
 import { MonthFilter } from "./_components/month-filter";
 import { PayoutCard } from "./_components/payout-card";
@@ -158,7 +158,7 @@ export default async function PayoutsPage({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <ExportCsvButton year={year} month={month} />
+          <ExportXlsxButton year={year} month={month} />
           <BulkSendButton
             periodYearMonth={monthValue}
             monthLabel={monthLabel}
