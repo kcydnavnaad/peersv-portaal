@@ -24,7 +24,13 @@ export async function POST(request: NextRequest) {
   }
 
   const secretarisEmail = process.env.SECRETARIS_EMAIL;
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmailRaw = process.env.ADMIN_EMAIL;
+  const adminEmails = adminEmailRaw
+    ? adminEmailRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
 
   if (!secretarisEmail) {
     console.error("[cron/monthly-payout] SECRETARIS_EMAIL not configured");
@@ -56,7 +62,7 @@ export async function POST(request: NextRequest) {
 
   const emailResult = await sendEmail({
     to: secretarisEmail,
-    cc: adminEmail || undefined,
+    cc: adminEmails.length > 0 ? adminEmails : undefined,
     subject: `PeerSV uitbetalingen — ${monthLabel}`,
     html: `
       <p>Hallo,</p>
