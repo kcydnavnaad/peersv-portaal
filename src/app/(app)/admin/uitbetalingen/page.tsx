@@ -2,7 +2,11 @@ import Link from "next/link";
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { performances, users } from "@/db/schema";
-import { formatAmount } from "@/lib/performances";
+import {
+  getAvailablePayoutMonths,
+  getMonthPerformances,
+} from "@/app/actions/payouts";
+import { formatAmount, performanceStatusLabel } from "@/lib/performances";
 import {
   getCapStatus,
   getPaymentCapYearly,
@@ -10,9 +14,11 @@ import {
 } from "@/lib/payment-cap";
 import { actsAsTrainer } from "@/lib/users";
 import { BulkSendButton } from "./_components/bulk-send-button";
+import { ExportMonthXlsxButton } from "./_components/export-month-xlsx-button";
 import { ExportXlsxButton } from "./_components/export-xlsx-button";
 import { MarkMonthPaidButton } from "./_components/mark-month-paid-button";
 import { MonthFilter } from "./_components/month-filter";
+import { MonthSelector } from "./_components/month-selector";
 import { PayoutCard } from "./_components/payout-card";
 
 export const dynamic = "force-dynamic";
@@ -100,10 +106,22 @@ function capBadge(status: CapStatus) {
 export default async function PayoutsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; maand?: string }>;
 }) {
   const now = new Date();
   const sp = await searchParams;
+
+  const availableMonths = await getAvailablePayoutMonths();
+  const maandValid =
+    sp.maand && /^\d{4}-\d{2}$/.test(sp.maand) ? sp.maand : null;
+
+  if (maandValid) {
+    return renderMonthView({
+      maand: maandValid,
+      availableMonths,
+    });
+  }
+
   const { year, month } = parseMonth(sp.month, {
     year: now.getFullYear(),
     month: now.getMonth() + 1,
@@ -168,8 +186,13 @@ export default async function PayoutsPage({
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:max-w-xs">
-        <MonthFilter options={monthOptions} current={monthValue} />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:max-w-xs">
+          <MonthFilter options={monthOptions} current={monthValue} />
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:max-w-xs">
+          <MonthSelector months={availableMonths} current={null} />
+        </div>
       </div>
 
       <>
@@ -285,5 +308,161 @@ export default async function PayoutsPage({
         </div>
       </>
     </div>
+  );
+}
+
+async function renderMonthView({
+  maand,
+  availableMonths,
+}: {
+  maand: string;
+  availableMonths: string[];
+}) {
+  const [yStr, mStr] = maand.split("-");
+  const year = Number(yStr);
+  const month = Number(mStr);
+  const monthLabel = `${DUTCH_MONTHS[month - 1]} ${year}`;
+
+  const trainers = await getMonthPerformances(year, month);
+
+  const totals = trainers.reduce(
+    (acc, t) => {
+      acc.open += t.openAmount;
+      acc.sent += t.sentAmount;
+      acc.paid += t.paidAmount;
+      acc.total += t.totalAmount;
+      acc.count += t.totalCount;
+      return acc;
+    },
+    { open: 0, sent: 0, paid: 0, total: 0, count: 0 },
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Maand-overzicht — {monthLabel}
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Alle prestaties (open, doorgestuurd én betaald) met performance-datum
+            in {monthLabel}. Read-only.
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <ExportMonthXlsxButton year={year} month={month} />
+          <Link
+            href="/admin/uitbetalingen"
+            className="text-xs text-slate-600 hover:underline"
+          >
+            ← Terug naar open-modus
+          </Link>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:max-w-xs">
+        <MonthSelector months={availableMonths} current={maand} />
+      </div>
+
+      {trainers.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+          Geen prestaties in {monthLabel}.
+        </div>
+      ) : (
+        <>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+            <div className="grid grid-cols-2 gap-y-1 sm:grid-cols-5">
+              <div>
+                <span className="text-slate-500">Open</span>
+                <div className="tabular-nums font-medium">
+                  {formatAmount(totals.open.toFixed(2))}
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-500">Doorgestuurd</span>
+                <div className="tabular-nums font-medium text-amber-800">
+                  {formatAmount(totals.sent.toFixed(2))}
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-500">Betaald</span>
+                <div className="tabular-nums font-medium text-emerald-800">
+                  {formatAmount(totals.paid.toFixed(2))}
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-500">Totaal</span>
+                <div className="tabular-nums font-semibold">
+                  {formatAmount(totals.total.toFixed(2))}
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-500">Aantal prestaties</span>
+                <div className="tabular-nums">{totals.count}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Trainer</th>
+                  <th className="px-4 py-3">Datum</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Ploeg</th>
+                  <th className="px-4 py-3 text-right">Bedrag</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Notities</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {trainers.flatMap((t) =>
+                  t.performances.map((p, i) => (
+                    <tr key={p.id}>
+                      <td className="px-4 py-3 font-medium">
+                        {i === 0 ? t.trainerName : ""}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {p.performanceDate}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {p.activityName ?? "-"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {p.teamName ?? "-"}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                        {formatAmount(p.amount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <MonthStatusBadge status={p.status} />
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {p.notes ?? ""}
+                      </td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MonthStatusBadge({ status }: { status: "open" | "sent" | "paid" }) {
+  const cls =
+    status === "paid"
+      ? "bg-emerald-50 text-emerald-800"
+      : status === "sent"
+        ? "bg-amber-50 text-amber-800"
+        : "bg-slate-100 text-slate-700";
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>
+      {performanceStatusLabel[status]}
+    </span>
   );
 }

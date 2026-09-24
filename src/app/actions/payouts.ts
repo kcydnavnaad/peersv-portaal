@@ -1,10 +1,10 @@
 "use server";
 
-import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { performances, users } from "@/db/schema";
+import { activityTypes, performances, teams, users } from "@/db/schema";
 import {
   calculateYearTotal,
   getCapStatus,
@@ -62,22 +62,157 @@ export async function previewYearTotalAfterPayment(
   };
 }
 
+function bufferToBytes(buffer: Buffer): Uint8Array {
+  return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+}
+
 export async function exportPayoutsXlsx(
   year: number,
   month: number,
 ): Promise<{ bytes: Uint8Array; filename: string; contentType: string }> {
   await requireAdmin();
-  const result = await buildPayoutsXlsx({ year, month });
-  // Return as plain Uint8Array so the RSC boundary serializes it cleanly.
+  const result = await buildPayoutsXlsx({ filter: { year, month } });
   return {
-    bytes: new Uint8Array(
-      result.buffer.buffer,
-      result.buffer.byteOffset,
-      result.buffer.byteLength,
-    ),
+    bytes: bufferToBytes(result.buffer),
     filename: result.filename,
     contentType: PAYOUT_XLSX_CONTENT_TYPE,
   };
+}
+
+export async function exportMonthViewXlsx(
+  year: number,
+  month: number,
+): Promise<{ bytes: Uint8Array; filename: string; contentType: string }> {
+  await requireAdmin();
+  const result = await buildPayoutsXlsx({
+    filter: { year, month },
+    mode: "monthView",
+  });
+  return {
+    bytes: bufferToBytes(result.buffer),
+    filename: result.filename,
+    contentType: PAYOUT_XLSX_CONTENT_TYPE,
+  };
+}
+
+/**
+ * Return all distinct year-month values that have at least one performance,
+ * newest first. Used to populate the maand-view dropdown.
+ */
+export async function getAvailablePayoutMonths(): Promise<string[]> {
+  await requireAdmin();
+  const rows = await db
+    .selectDistinct({
+      ym: sql<string>`to_char(${performances.performanceDate}, 'YYYY-MM')`,
+    })
+    .from(performances)
+    .orderBy(sql`to_char(${performances.performanceDate}, 'YYYY-MM') desc`);
+  return rows.map((r) => r.ym);
+}
+
+export type MonthViewPerformance = {
+  id: number;
+  performanceDate: string;
+  activityName: string | null;
+  teamName: string | null;
+  amount: string;
+  status: "open" | "sent" | "paid";
+  notes: string | null;
+};
+
+export type MonthViewTrainer = {
+  trainerId: number;
+  trainerName: string;
+  iban: string | null;
+  openAmount: number;
+  sentAmount: number;
+  paidAmount: number;
+  totalAmount: number;
+  totalCount: number;
+  performances: MonthViewPerformance[];
+};
+
+/**
+ * Fetch all performances in a given month, grouped per trainer, with
+ * per-status subtotals. Read-only view for /admin/uitbetalingen?maand=.
+ */
+export async function getMonthPerformances(
+  year: number,
+  month: number,
+): Promise<MonthViewTrainer[]> {
+  await requireAdmin();
+
+  const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+  const monthEnd =
+    month === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+
+  const rows = await db
+    .select({
+      id: performances.id,
+      trainerId: performances.userId,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      iban: users.iban,
+      performanceDate: performances.performanceDate,
+      amount: performances.amount,
+      status: performances.status,
+      notes: performances.notes,
+      activityName: activityTypes.name,
+      teamName: teams.name,
+    })
+    .from(performances)
+    .innerJoin(users, eq(users.id, performances.userId))
+    .leftJoin(activityTypes, eq(activityTypes.id, performances.activityTypeId))
+    .leftJoin(teams, eq(teams.id, performances.teamId))
+    .where(
+      and(
+        gte(performances.performanceDate, monthStart),
+        lt(performances.performanceDate, monthEnd),
+      ),
+    )
+    .orderBy(
+      asc(users.lastName),
+      asc(users.firstName),
+      asc(performances.performanceDate),
+    );
+
+  const byTrainer = new Map<number, MonthViewTrainer>();
+  for (const r of rows) {
+    let bucket = byTrainer.get(r.trainerId);
+    if (!bucket) {
+      bucket = {
+        trainerId: r.trainerId,
+        trainerName: `${r.firstName} ${r.lastName}`,
+        iban: r.iban,
+        openAmount: 0,
+        sentAmount: 0,
+        paidAmount: 0,
+        totalAmount: 0,
+        totalCount: 0,
+        performances: [],
+      };
+      byTrainer.set(r.trainerId, bucket);
+    }
+    const amt = Number(r.amount);
+    bucket.totalAmount += amt;
+    bucket.totalCount += 1;
+    if (r.status === "open") bucket.openAmount += amt;
+    else if (r.status === "sent") bucket.sentAmount += amt;
+    else if (r.status === "paid") bucket.paidAmount += amt;
+    bucket.performances.push({
+      id: r.id,
+      performanceDate: r.performanceDate,
+      activityName: r.activityName,
+      teamName: r.teamName,
+      amount: r.amount,
+      status: r.status,
+      notes: r.notes,
+    });
+  }
+
+  return Array.from(byTrainer.values());
 }
 
 export async function previewMarkTrainerMonthAsPaid(
