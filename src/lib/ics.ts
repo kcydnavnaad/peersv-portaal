@@ -18,13 +18,22 @@ function fmtUtcDate(d: Date): string {
 }
 
 function fmtDate(d: Date): string {
-  // 20260610 (voor all-day events)
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    d.getUTCFullYear().toString() +
-    pad(d.getUTCMonth() + 1) +
-    pad(d.getUTCDate())
-  );
+  // 20260610 (voor all-day events, in Europe/Brussels timezone)
+  // Use Intl.DateTimeFormat with Brussels timezone to get local date parts —
+  // an event stored at 2026-10-24 00:00+02 is 2026-10-23 22:00 UTC, but must
+  // render as 20261024 in the ICS all-day format.
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Brussels",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+
+  const year = parts.find((p) => p.type === "year")?.value ?? "";
+  const month = parts.find((p) => p.type === "month")?.value ?? "";
+  const day = parts.find((p) => p.type === "day")?.value ?? "";
+
+  return `${year}${month}${day}`;
 }
 
 function escapeIcs(text: string): string {
