@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1.7
 
 # Stage 1: install all deps (incl. dev) and build native modules (bcrypt).
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
 # Stage 2: build the Next.js standalone bundle.
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
@@ -20,7 +20,7 @@ RUN mkdir -p drizzle
 RUN npm run build
 
 # Stage 3: minimal runtime image with migration tooling.
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \
